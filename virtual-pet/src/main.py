@@ -14,6 +14,42 @@ def print_pet_status(pet: Pet):
     print(f"Emotional State: {pet.get_emotional_state()}")
     print("")
     
+from pet import Pet
+from economy import Economy
+import json  # <- your save/load functions need this
+
+# --- Save/Load Functions ---
+def save_game(pet, economy, filename="save.json"):
+    data = {
+        "pet": pet.__dict__,
+        "economy": {
+            "balance": economy.balance,
+            "expenses": economy.expenses
+        }
+    }
+    with open(filename, "w") as f:
+        json.dump(data, f)
+
+def load_game(filename="save.json"):
+    with open(filename, "r") as f:
+        data = json.load(f)
+    pet_data = data["pet"]
+    economy_data = data["economy"]
+    
+    pet = Pet(pet_data["name"], pet_data["pet_type"], pet_data["age_days"])
+    pet.hunger = pet_data["hunger"]
+    pet.happiness = pet_data["happiness"]
+    pet.health = pet_data["health"]
+    pet.energy = pet_data["energy"]
+    pet.cleanliness = pet_data["cleanliness"]
+    
+    economy = Economy(economy_data["balance"])
+    economy.expenses = economy_data["expenses"]
+    
+    return pet, economy
+# --- End of Save/Load ---
+
+    
 def main():
     # Create pet and economy
     name = input("Enter your pet's name: ")
@@ -46,7 +82,7 @@ def main():
                 print(f"{pet.name} played and is happier!")
         elif choice == "3":
             try:
-                duration = int(input("Enter hours of sleep: "))
+                duration = get_int_input("Enter hours of sleep: ", 0, 24)
                 pet.sleep(duration)
                 print(f"{pet.name} slept for {duration} hours.")
             except ValueError:
@@ -71,5 +107,17 @@ def __str__(self):
                 f"Hunger: {self.hunger}, Happiness: {self.happiness}, Health: {self.health}\n"
                 f"Energy: {self.energy}, Cleanliness: {self.cleanliness}, State: {self.get_emotional_state()}")
     
+def get_int_input(prompt, min_val=None, max_val=None):
+    while True:
+        try:
+            val = int(input(prompt))
+            if (min_val is not None and val < min_val) or (max_val is not None and val > max_val):
+                print(f"Enter a value between {min_val} and {max_val}.")
+                continue
+            return val
+        except ValueError:
+            print("Please enter a valid number.")
+
+
 if __name__ == "__main__":
     main()

@@ -45,13 +45,19 @@ def main():
                 pet.play(15)  # increase happiness by 15
                 print(f"{pet.name} played and is happier!")
         elif choice == "3":
-            duration = int(input("Enter hours of sleep: "))
-            pet.sleep(duration)
-            print(f"{pet.name} slept for {duration} hours.")
+            try:
+                duration = int(input("Enter hours of sleep: "))
+                pet.sleep(duration)
+                print(f"{pet.name} slept for {duration} hours.")
+            except ValueError:
+                print("Please enter a valid number. ")
         elif choice == "4":
-            days = int(input("Advance how many days? "))
-            pet.pass_time(days)
-            print(f"{days} day(s) have passed.")
+            try: 
+                days = int(input("Advance how many days? "))
+                pet.pass_time(days)
+                print(f"{days} day(s) have passed.")
+            except ValueError:
+                print("Please enter a valid number: ")
         elif choice == "5":
             economy.report()
         elif choice == "6":
@@ -59,7 +65,11 @@ def main():
             break
         else:
             print("Invalid choice. Try again.")
-    
+            
+def __str__(self):
+    return (f"{self.name} ({self.pet_type}) - Age: {self.age_days} days\n"
+                f"Hunger: {self.hunger}, Happiness: {self.happiness}, Health: {self.health}\n"
+                f"Energy: {self.energy}, Cleanliness: {self.cleanliness}, State: {self.get_emotional_state()}")
     
 if __name__ == "__main__":
     main()

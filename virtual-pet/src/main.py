@@ -1,6 +1,7 @@
 # Main.py
 from pet import Pet
 from economy import Economy
+import json 
 
 def print_pet_status(pet: Pet):
     print(f"Pet Name: {pet.name}")
@@ -14,10 +15,6 @@ def print_pet_status(pet: Pet):
     print(f"Emotional State: {pet.get_emotional_state()}")
     print("")
     
-from pet import Pet
-from economy import Economy
-import json  # <- your save/load functions need this
-
 # --- Save/Load Functions ---
 def save_game(pet, economy, filename="save.json"):
     data = {

@@ -5,14 +5,10 @@ class Economy:
     def __init__(self, starting_balance=1000):
         self.balance = starting_balance
         self.expenses = defaultdict(int)
-        self.expenses = {
-            "food": 0,
-            "clothing": 0,
-            "entertainment": 0,
-            "toys": 0,
-            "vet": 0,
-            "other": 0
-        }
+        # initialize predefined categories if you want
+        for category in ["food", "clothing", "entertainment", "toys", "vet", "other"]:
+            self.expenses[category] = 0
+
 
     def spend(self, category: str, amount: int) -> bool:
         if category in self.expenses and amount <= self.balance:
@@ -22,7 +18,6 @@ class Economy:
         print(f"Cannot spend {amount} on {category}. Current balance: {self.balance}")
         return False
 
-           
         
     def earn(self, amount:int):
         if amount > 0:

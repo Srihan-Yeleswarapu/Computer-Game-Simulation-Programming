@@ -1,0 +1,72 @@
+Game Topic: Career Quest
+
+Create an engaging game where players jump into mini-worlds that showcase different careers. In each career world, players must:
+
+• Experience a short scenario that captures what the job is like
+• Complete skill-based challenges and tasks unique to that profession
+
+The game must:
+
+• Be playable on a device using Windows 10, Mac OS, a modern web browser, or a mobile platform
+• Be secure
+• Have no game-breaking bugs
+
+By the end, players will discover what each career involves and the skills they’ll need to succeed.
+
+
+Rubric:
+
+1. User with no knowledge of the concept/topic can identify it based on use of project and followed all the guidelines
+2. Rules are well explained to the judges and exist within the game
+3. User can navigate the game with rules as defined and several outcomes are available for completion
+4. Game is innovative and creative
+5. Tools and technologies (e.g., language, design tools, game engines) are thoroughly explained with clear rationale. The implementation demonstrates
+sophistication and complexity, with evaluation of effectiveness and possible improvements.
+6. Graphics are appropriate for the concept/topic and tools for development are well explained
+7. Graphics & assets consistently applied and enhance the user experience
+8. Color, contrast, background, typography, sound, and design enhance the user experience
+9. Title screen provided, but allows user to execute without instructions
+10. UX design presented, with details about the design rationale, user journey, and accessibility features highlighted 
+11. Game is enjoyable and takes user experience into account 
+12. Controls & mechanics are intuitive and enhance the user experience
+13. Presentation flowed in a logical sequence; statements were well organized
+14. Demonstrated all skills, enhancing the overall presentation
+15. Responds confidently with clear, accurate, and thoughtful answers that enhance the overall presentation.
+
+Execution Aligned with Guidelines: (All criteria must be met)
+    Used only allowable technology devices (sizing specs followed; maximum of three)
+
+    Presentation aligned with the assigned topic
+
+    Maintained professional boundaries during set-up time (no interactionwith judges)
+
+    Did not leave materials behind after the presentation
+
+    Links or QR codes were displayed appropriately (not clicked or scanned by judges)
+
+    Audio was presented without external speakers (preliminary round)
+
+    Avoided use of food or live animals
+
+
+
+
+
+CORE CONCEPT:
+
+Good Care means happy and healthy pet
+Neglected Care means sick sad and ill pet with higher costs
+
+PET MODEL CORE STATE:
+
+name
+type
+hunger
+happiness
+health
+energy
+cleanliness
+age
+
+ECONOMY SYSTEM:
+

@@ -2,6 +2,7 @@
 from pet import Pet
 from economy import Economy
 import json 
+import random
 
 def print_pet_status(pet: Pet):
     print(f"Pet Name: {pet.name}")
@@ -46,6 +47,17 @@ def load_game(filename="save.json"):
     return pet, economy
 # --- End of Save/Load ---
 
+def random_event(pet, economy):
+    """Occasionally triggers a random event."""
+    events = [
+        lambda: setattr(pet, "happiness", min(100, pet.happiness + 10)) or print(f"{pet.name} found a toy and got happier!"),
+        lambda: setattr(pet, "health", max(0, pet.health - 5)) or print(f"{pet.name} got a little sick..."),
+        lambda: economy.earn(50) or print("You found $50!"),
+        lambda: setattr(pet, "cleanliness", max(0, pet.cleanliness - 10)) or print(f"{pet.name} got dirty outside!")
+    ]
+    if random.random() < 0.2:  # 20% chance per action
+        random.choice(events)()
+
     
 def main():
     # Create pet and economy
@@ -55,7 +67,7 @@ def main():
     economy = Economy(starting_balance=1000)
 
     while True:
-        print_pet_status(pet)
+        print(pet)
         print(f"Current Balance: ${economy.get_balance()}")
         print("\nActions:")
         print("1. Feed pet ($10 per feed)")
@@ -63,46 +75,67 @@ def main():
         print("3. Sleep")
         print("4. Advance time")
         print("5. Show expenses report")
-        print("6. Quit")
+        print("6. Save game")
+        print("7. Load game")
+        print("8. Quit")
 
         choice = input("Choose an action: ")
 
         if choice == "1":
             cost = 10
             if economy.spend("food", cost):
-                pet.feed(20)  # increase hunger by 20
+                pet.feed(20)
                 print(f"{pet.name} was fed!")
+            random_event(pet, economy)
+            save_game(pet, economy)
+            print("Game auto-saved!")
+
         elif choice == "2":
             cost = 5
             if economy.spend("toys", cost):
-                pet.play(15)  # increase happiness by 15
+                pet.play(15)
                 print(f"{pet.name} played and is happier!")
+            random_event(pet, economy)
+            save_game(pet, economy)
+            print("Game auto-saved!")
         elif choice == "3":
-            try:
-                duration = get_int_input("Enter hours of sleep: ", 0, 24)
-                pet.sleep(duration)
-                print(f"{pet.name} slept for {duration} hours.")
-            except ValueError:
-                print("Please enter a valid number. ")
+            duration = get_int_input("Enter hours of sleep: ", 0, 24)
+            pet.sleep(duration)
+            print(f"{pet.name} slept for {duration} hours.")
+            random_event(pet, economy)
+            save_game(pet, economy)
+            print("Game auto-saved!")
         elif choice == "4":
-            try: 
-                days = int(input("Advance how many days? "))
-                pet.pass_time(days)
-                print(f"{days} day(s) have passed.")
-            except ValueError:
-                print("Please enter a valid number: ")
+            days = get_int_input("Advance how many days? ", 1)
+            pet.pass_time(days)
+            print(f"{days} day(s) have passed.")
+            random_event(pet, economy)
+            save_game(pet, economy)
+            print("Game auto-saved!")
         elif choice == "5":
             economy.report()
+            save_game(pet, economy)
+            print("Game auto-saved!")
         elif choice == "6":
+            save_game(pet, economy)
+            print("Game saved successfully!")
+        elif choice == "7":
+            try:
+                pet, economy = load_game()
+                print("Game loaded successfully!")
+            except FileNotFoundError:
+                print("No save file found.")
+        elif choice == "8":
             print("Exiting the game. Goodbye!")
             break
         else:
             print("Invalid choice. Try again.")
+
             
-def __str__(self):
-    return (f"{self.name} ({self.pet_type}) - Age: {self.age_days} days\n"
-                f"Hunger: {self.hunger}, Happiness: {self.happiness}, Health: {self.health}\n"
-                f"Energy: {self.energy}, Cleanliness: {self.cleanliness}, State: {self.get_emotional_state()}")
+#def __str__(self):
+#    return (f"{self.name} ({self.pet_type}) - Age: {self.age_days} days\n"
+#            f"Hunger: {self.hunger}, Happiness: {self.happiness}, Health: {self.health}\n"
+#            f"Energy: {self.energy}, Cleanliness: {self.cleanliness}, State: {self.get_emotional_state()}")
     
 def get_int_input(prompt, min_val=None, max_val=None):
     while True:

@@ -25,9 +25,11 @@ class Pet:
             self.age_days += 1
             self.hunger += 5
             self.happiness -= 3
-            self.health -= 2
             self.energy -= 4
             self.cleanliness -= 3
+            
+            if self.hunger < 20 or self.cleanliness < 20:
+                self.health -= 5            
             self.clamp_stats()
             
     def get_emotional_state(self):
@@ -35,14 +37,32 @@ class Pet:
             return "happy"
         elif self.happiness > 40:
             return "neutral"
+        elif self.health < 30:
+            return "sick"
+        elif self.hunger > 70:
+            return "hungry"
+        elif self.energy < 30:
+            return "tired"
+        elif self.cleanliness < 30:
+            return "dirty"
         else:
             return "sad"
             
     def sleep(self, duration):
+        self.energy += duration * 10
+        self.hunfer -= duration * 2
         self.energy = min(100, self.energy + duration * 10)
+        self.clamp_stats()
 
     def feed(self, amount):
+        self.hunger += amount
+        self.health += amount // 5
         self.hunger = max(0, self.hunger - amount)
+        self.clamp_stats()
 
     def play(self, duration):
+        self.happiness += duration * 5
+        self.energy -= duration * 3
+        self.hunger -= duration * 2
         self.happiness = min(100, self.happiness + duration)
+        self.clamp_stats()

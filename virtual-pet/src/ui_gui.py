@@ -3,6 +3,17 @@ from tkinter import messagebox
 from pet import Pet
 from economy import Economy
 
+BACKGROUND = "#0f172a"
+CARD_BG = "#111827"
+INPUT_BG = "#0b1220"
+BORDER = "#1f2937"
+TEXT_PRIMARY = "#e5e7eb"
+TEXT_SECONDARY = "#9ca3af"
+ACCENT = "#22c55e"
+ACCENT_DARK = "#16a34a"
+BUTTON_BG = "#2563eb"
+BUTTON_BG_ACTIVE = "#1d4ed8"
+
 # =========================
 # ASCII PET SKINS
 # =========================
@@ -10,100 +21,157 @@ from economy import Economy
 PET_SKINS = {
     "dog": {
         "happy": r"""
- /\_/\ 
-( ^_^ )
- /   \
++--------------+
+| /\_/\        |
+|( ^.^ )  /|   |
+|(  U  ) /_/   |
++--------------+
 """,
-        "sad": r"""
- /\_/\ 
-( T_T )
- /   \
+        "neutral": r"""
++--------------+
+| /\_/\        |
+|( o.o )  /|   |
+|(  -  ) /_/   |
++--------------+
 """,
         "hungry": r"""
- /\_/\ 
-( o_o )
- /   \
++--------------+
+| /\_/\        |
+|( o.o )  /|   |
+|(  ~  ) /_/   |
++--------------+
+""",
+        "tired": r"""
++--------------+
+| /\_/\        |
+|( -.- )  /|   |
+|(  -  ) /_/   |
++--------------+
 """,
         "dirty": r"""
- /\_/\ 
-( >_< )
- /xxx\
++--------------+
+| /\_/\   . .  |
+|( x.x )  /|   |
+|(  ~  ) /_/   |
++--------------+
 """,
-        "excited": r"""
- /\_/\ 
-( ^O^ )
- /   \
+        "sick": r"""
++--------------+
+| /\_/\  zz    |
+|( u.u )  /|   |
+|(  _  ) /_/   |
++--------------+
 """,
-        "bored": r"""
- /\_/\ 
-( -_- )
- /   \
+        "sad": r"""
++--------------+
+| /\_/\        |
+|( T.T )  /|   |
+|(  _  ) /_/   |
++--------------+
 """
     },
 
     "cat": {
         "happy": r"""
- /\_/\ 
-( =^.^= )
-  > ^ <
++--------------+
+| /\_/\  /\    |
+|( =^.^= ) )   |
+| >  w  <(/    |
++--------------+
 """,
-        "sad": r"""
- /\_/\ 
-( =T.T= )
-  > ^ <
+        "neutral": r"""
++--------------+
+| /\_/\  /\    |
+|( =o.o= ) )   |
+| >  -  <(/    |
++--------------+
 """,
         "hungry": r"""
- /\_/\ 
-( =o.o= )
-  > ^ <
++--------------+
+| /\_/\  /\    |
+|( =o.o= ) )   |
+| >  ~  <(/    |
++--------------+
+""",
+        "tired": r"""
++--------------+
+| /\_/\  /\    |
+|( =-.-= ) )   |
+| >  -  <(/    |
++--------------+
 """,
         "dirty": r"""
- /\_/\ 
-( =>_< )
-  >xxx<
++--------------+
+| /\_/\  /\ .  |
+|( =x.x= ) )   |
+| >  ~  <(/    |
++--------------+
 """,
-        "excited": r"""
- /\_/\ 
-( =^O^= )
-  > ^ <
+        "sick": r"""
++--------------+
+| /\_/\  /\    |
+|( =u.u= ) )   |
+| >  _  <(/    |
++--------------+
 """,
-        "bored": r"""
- /\_/\ 
-( =-.-= )
-  > ^ <
+        "sad": r"""
++--------------+
+| /\_/\  /\    |
+|( =T.T= ) )   |
+| >  _  <(/    |
++--------------+
 """
     },
 
     "guinea pig": {
         "happy": r"""
- (____)
- ( ^_^ )
- /____\
++--------------+
+| (\__//)      |
+|( 'u'  )  o ) |
+| \____/  (_/  |
++--------------+
 """,
-        "sad": r"""
- (____)
- ( T_T )
- /____\
+        "neutral": r"""
++--------------+
+| (\__//)      |
+|( 'o'  )  o ) |
+| \____/  (_/  |
++--------------+
 """,
         "hungry": r"""
- (____)
- ( o_o )
- /____\
++--------------+
+| (\__//)      |
+|( 'o'  )  o ) |
+| \_~~_/  (_/  |
++--------------+
+""",
+        "tired": r"""
++--------------+
+| (\__//)      |
+|( -.-  )  o ) |
+| \____/  (_/  |
++--------------+
 """,
         "dirty": r"""
- (____)
- ( >_< )
- /xxxx\
++--------------+
+| (\__//)  .   |
+|( 'x'  )  o ) |
+| \_~~_/  (_/  |
++--------------+
 """,
-        "excited": r"""
- (____)
- ( ^O^ )
- /____\
+        "sick": r"""
++--------------+
+| (\__//)      |
+|( 'u'  )  o ) |
+| \_--_/  (_/  |
++--------------+
 """,
-        "bored": r"""
- (____)
- ( -_- )
- /____\
+        "sad": r"""
++--------------+
+| (\__//)      |
+|( 'T'  )  o ) |
+| \____/  (_/  |
++--------------+
 """
     }
 }
@@ -113,8 +181,9 @@ class VirtualPetGUI:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Virtual Pet Simulator")
-        self.root.geometry("600x500")
-        self.root.configure(bg="#1e1e1e")
+        self.root.geometry("640x520")
+        self.root.configure(bg=BACKGROUND)
+        self.root.resizable(False, False)
 
         self.pet = None
         self.economy = None
@@ -122,44 +191,66 @@ class VirtualPetGUI:
         self.create_start_screen()
         self.root.mainloop()
 
-
-
     def create_start_screen(self):
         self.clear()
 
+        header = tk.Frame(self.root, bg=BACKGROUND, pady=10)
+        header.pack(fill="x")
+
         title = tk.Label(
-            self.root,
-            text="🐾 Virtual Pet Simulator 🐾",
-            font=("Courier", 20, "bold"),
-            fg="white",
-            bg="#1e1e1e"
+            header,
+            text="Virtual Pet Studio",
+            font=("Consolas", 22, "bold"),
+            fg=TEXT_PRIMARY,
+            bg=BACKGROUND
         )
-        title.pack(pady=20)
+        title.pack()
 
-        tk.Label(self.root, text="Pet Name:", fg="white", bg="#1e1e1e").pack()
-        self.name_entry = tk.Entry(self.root)
-        self.name_entry.pack()
+        subtitle = tk.Label(
+            header,
+            text="Name your companion and pick their species to begin.",
+            font=("Consolas", 11),
+            fg=TEXT_SECONDARY,
+            bg=BACKGROUND
+        )
+        subtitle.pack()
 
-        tk.Label(self.root, text="Pet Type:", fg="white", bg="#1e1e1e").pack()
+        form = tk.Frame(self.root, bg=CARD_BG, padx=20, pady=20, highlightbackground=BORDER, highlightthickness=1)
+        form.pack(pady=20, fill="x", padx=20)
+
+        tk.Label(form, text="Pet Name", fg=TEXT_PRIMARY, bg=CARD_BG, font=("Consolas", 12, "bold")).grid(row=0, column=0, sticky="w")
+        self.name_entry = tk.Entry(form, font=("Consolas", 12), bg=INPUT_BG, fg=TEXT_PRIMARY, insertbackground=TEXT_PRIMARY, relief="flat")
+        self.name_entry.grid(row=1, column=0, sticky="ew", pady=(4, 10))
+
+        tk.Label(form, text="Pet Type", fg=TEXT_PRIMARY, bg=CARD_BG, font=("Consolas", 12, "bold")).grid(row=2, column=0, sticky="w")
         self.pet_type = tk.StringVar(value="dog")
-        tk.OptionMenu(self.root, self.pet_type, "dog", "cat", "guinea pig").pack()
+        pet_selector = tk.OptionMenu(form, self.pet_type, "dog", "cat", "guinea pig")
+        pet_selector.config(bg=INPUT_BG, fg=TEXT_PRIMARY, activebackground=BORDER, activeforeground=TEXT_PRIMARY, relief="flat", highlightthickness=0, font=("Consolas", 11))
+        pet_selector["menu"].config(bg=INPUT_BG, fg=TEXT_PRIMARY, activebackground=BORDER, activeforeground=TEXT_PRIMARY, font=("Consolas", 11))
+        pet_selector.grid(row=3, column=0, sticky="ew", pady=(4, 12))
 
-        tk.Button(
-            self.root,
+        start_btn = tk.Button(
+            form,
             text="Start Game",
             command=self.start_game,
-            bg="#4CAF50",
-            fg="white"
-        ).pack(pady=20)
-
-
+            bg=ACCENT,
+            fg=BACKGROUND,
+            activebackground=ACCENT_DARK,
+            activeforeground=BACKGROUND,
+            font=("Consolas", 12, "bold"),
+            relief="flat",
+            padx=10,
+            pady=6
+        )
+        start_btn.grid(row=4, column=0, sticky="ew")
+        form.columnconfigure(0, weight=1)
 
     def start_game(self):
-        name = self.name_entry.get()
+        name = self.name_entry.get().strip()
         ptype = self.pet_type.get()
 
         if not name:
-            messagebox.showerror("Error", "Name your pet!")
+            messagebox.showerror("Error", "Please give your pet a name.")
             return
 
         self.pet = Pet(name, ptype)
@@ -167,56 +258,90 @@ class VirtualPetGUI:
 
         self.create_game_screen()
 
-
     def create_game_screen(self):
         self.clear()
 
-        self.pet_display = tk.Label(
-            self.root,
-            font=("Courier", 14),
-            fg="white",
-            bg="#1e1e1e",
-            justify="center"
+        container = tk.Frame(self.root, bg=BACKGROUND, padx=10, pady=10)
+        container.pack(fill="both", expand=True)
+
+        header = tk.Label(
+            container,
+            text="Care Dashboard",
+            font=("Consolas", 18, "bold"),
+            fg=TEXT_PRIMARY,
+            bg=BACKGROUND
         )
-        self.pet_display.pack(pady=10)
+        header.pack(anchor="w", pady=(0, 8))
+
+        display_frame = tk.Frame(container, bg=CARD_BG, padx=14, pady=14, highlightbackground=BORDER, highlightthickness=1)
+        display_frame.pack(fill="x")
+
+        self.pet_display = tk.Label(
+            display_frame,
+            font=("Consolas", 14),
+            fg=TEXT_PRIMARY,
+            bg=INPUT_BG,
+            justify="center",
+            relief="ridge",
+            bd=1,
+            padx=10,
+            pady=10
+        )
+        self.pet_display.pack(fill="x")
 
         self.stats_label = tk.Label(
-            self.root,
-            font=("Courier", 10),
-            fg="white",
-            bg="#1e1e1e"
+            display_frame,
+            font=("Consolas", 11),
+            fg=TEXT_PRIMARY,
+            bg=CARD_BG,
+            justify="left",
+            anchor="w",
+            pady=8
         )
-        self.stats_label.pack()
+        self.stats_label.pack(fill="x", pady=(8, 0))
 
-        btn_frame = tk.Frame(self.root, bg="#1e1e1e")
-        btn_frame.pack(pady=10)
+        btn_frame = tk.Frame(container, bg=BACKGROUND)
+        btn_frame.pack(pady=12)
 
-        tk.Button(btn_frame, text="Feed", command=self.feed).grid(row=0, column=0, padx=5)
-        tk.Button(btn_frame, text="Play", command=self.play).grid(row=0, column=1, padx=5)
-        tk.Button(btn_frame, text="Sleep", command=self.sleep).grid(row=0, column=2, padx=5)
-        tk.Button(btn_frame, text="Advance Day", command=self.advance).grid(row=0, column=3, padx=5)
+        btn_style = {
+            "bg": BUTTON_BG,
+            "fg": TEXT_PRIMARY,
+            "activebackground": BUTTON_BG_ACTIVE,
+            "activeforeground": TEXT_PRIMARY,
+            "font": ("Consolas", 11, "bold"),
+            "relief": "flat",
+            "padx": 12,
+            "pady": 6,
+            "bd": 0
+        }
+
+        tk.Button(btn_frame, text="Feed", command=self.feed, **btn_style).grid(row=0, column=0, padx=6, pady=6)
+        tk.Button(btn_frame, text="Play", command=self.play, **btn_style).grid(row=0, column=1, padx=6, pady=6)
+        tk.Button(btn_frame, text="Sleep", command=self.sleep, **btn_style).grid(row=0, column=2, padx=6, pady=6)
+        tk.Button(btn_frame, text="Advance Day", command=self.advance, **btn_style).grid(row=0, column=3, padx=6, pady=6)
 
         self.update_ui()
 
-
     def update_ui(self):
         state = self.pet.get_emotional_state()
-        skin = PET_SKINS[self.pet.pet_type].get(state, "")
+        species = getattr(self.pet, "species", getattr(self.pet.pet_type, "type", "dog")).lower()
+        skins = PET_SKINS.get(species, PET_SKINS["dog"])
+        skin = skins.get(state) or skins.get("neutral", "")
 
         self.pet_display.config(text=skin)
 
+        stats = self.pet.pet_type
         self.stats_label.config(
             text=(
-                f"{self.pet.name} ({self.pet.pet_type})\n"
-                f"Hunger: {self.pet.hunger}\n"
-                f"Happiness: {self.pet.happiness}\n"
-                f"Health: {self.pet.health}\n"
-                f"Energy: {self.pet.energy}\n"
-                f"Cleanliness: {self.pet.cleanliness}\n"
-                f"Balance: ${self.economy.balance}"
+                f"{self.pet.name} - {species.title()}\n"
+                f"Hunger:       {self.pet.hunger:>3}/{stats.hunger}\n"
+                f"Happiness:    {self.pet.happiness:>3}/{stats.happiness}\n"
+                f"Health:       {self.pet.health:>3}/{stats.health}\n"
+                f"Energy:       {self.pet.energy:>3}/{stats.energy}\n"
+                f"Cleanliness:  {self.pet.cleanliness:>3}/{stats.cleanliness}\n"
+                f"Balance:      ${self.economy.balance}"
             )
         )
-
 
     def feed(self):
         if self.economy.spend("food", 10):

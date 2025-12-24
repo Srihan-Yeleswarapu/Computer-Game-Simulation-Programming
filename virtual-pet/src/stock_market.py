@@ -9,6 +9,7 @@ class StockMarket:
     """
     Lightweight stock market simulator for the GUI economy tab.
     Prices move a bit each tick; buy/sell adjusts the shared Economy balance.
+    Includes occasional crashes and surges to keep risk meaningful.
     """
 
     def __init__(self, economy: Economy, seed: int = None):
@@ -21,6 +22,8 @@ class StockMarket:
         }
         self.holdings = defaultdict(int)
         self.day = 0
+        # Momentum lets symbols drift; crashes can push them into long slumps
+        self.momentum: Dict[str, float] = {symbol: random.uniform(-0.02, 0.03) for symbol in self.prices}
         if seed is not None:
             random.seed(seed)
 
@@ -28,8 +31,23 @@ class StockMarket:
         """Advance market one step and slightly move prices."""
         self.day += 1
         for symbol, price in self.prices.items():
-            swing = random.uniform(-0.08, 0.12)  # -8% to +12%
-            new_price = max(1.0, round(price * (1 + swing), 2))
+            swing = random.uniform(-0.1, 0.1)  # wider range to allow dips
+            swing += self.momentum.get(symbol, 0.0)
+
+            # Occasional surge
+            if random.random() < 0.06:
+                swing += random.uniform(0.15, 0.4)
+
+            # Occasional crash
+            if random.random() < 0.05:
+                crash_factor = random.uniform(0.2, 0.7)
+                price = max(0.5, price * crash_factor)
+                # Post-crash malaise: push momentum negative so some never recover
+                self.momentum[symbol] = random.uniform(-0.08, -0.01)
+
+            new_price = max(0.5, round(price * (1 + swing), 2))
+            # Slowly mean-revert momentum so it doesn't explode upwards forever
+            self.momentum[symbol] = max(-0.1, min(0.08, self.momentum.get(symbol, 0.0) * 0.9 + random.uniform(-0.01, 0.02)))
             self.prices[symbol] = new_price
         return self.prices
 

@@ -410,7 +410,6 @@ class VirtualPetGUI:
 
         tk.Button(control_row, text="Buy", command=self.buy_stock, **action_style).grid(row=1, column=2, padx=4, sticky="ew")
         tk.Button(control_row, text="Sell", command=self.sell_stock, **action_style).grid(row=1, column=3, padx=4, sticky="ew")
-        tk.Button(control_row, text="Market Tick", command=self.tick_market, **action_style).grid(row=1, column=4, padx=4, sticky="ew")
         control_row.columnconfigure(0, weight=1)
         control_row.columnconfigure(1, weight=1)
 
@@ -478,6 +477,9 @@ class VirtualPetGUI:
         self.check_game_over()
 
     def advance(self):
+        # Market advances with time to prevent spamming ticks
+        self.stock_market.tick()
+        self.market_message.config(text="Day advanced. Market moved.", fg=TEXT_SECONDARY)
         self.pet.pass_time(1)
         self.update_ui()
         self.check_game_over()
@@ -513,10 +515,8 @@ class VirtualPetGUI:
         self.update_ui()
 
     def tick_market(self):
-        self.stock_market.tick()
-        self.market_message.config(text="Market moved for a new day.", fg=TEXT_SECONDARY)
-        self.update_economy_ui()
-        self.update_ui()
+        # Manual ticks are disabled; market moves with Advance Day
+        self.market_message.config(text="Advance the day to move the market.", fg=TEXT_SECONDARY)
 
     def clear(self):
         for widget in self.root.winfo_children():

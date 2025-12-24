@@ -177,10 +177,10 @@ PET_SKINS = {
 }
 
 GUI_PET_PROFILES = {
-    "dog": petStats("dog", 10, 80, 70, 90),
-    "cat": petStats("cat", 5, 70, 60, 80),
+    "dog": petStats("dog", 40, 80, 70, 90),
+    "cat": petStats("cat", 80, 70, 60, 80),
     # No preset existed in main.py for guinea pig; provide a balanced profile here
-    "guinea pig": petStats("guinea pig", 8, 75, 65, 70, 90),
+    "guinea pig": petStats("guinea pig", 60, 75, 65, 70, 90),
 }
 
 def format_bar(label: str, value: int, max_value: int, width: int = 18) -> str:

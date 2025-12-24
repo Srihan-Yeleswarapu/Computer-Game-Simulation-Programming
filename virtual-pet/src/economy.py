@@ -7,7 +7,7 @@ class Economy:
         self.balance = starting_balance
         self.expenses = defaultdict(int)
         # initialize predefined categories if you want
-        for category in ["food", "clothing", "entertainment", "toys", "vet", "other"]:
+        for category in ["food", "clothing", "entertainment", "toys", "vet", "grooming", "other"]:
             self.expenses[category] = 0
 
 

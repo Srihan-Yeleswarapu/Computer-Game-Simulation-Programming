@@ -22,51 +22,51 @@ PET_SKINS = {
     "dog": {
         "happy": r"""
 +--------------+
-| /\_/\        |
-|( ^.^ )  /|   |
-|(  U  ) /_/   |
+| / \__        |
+|(    @\___    |
+|/         O   |
 +--------------+
 """,
         "neutral": r"""
 +--------------+
-| /\_/\        |
-|( o.o )  /|   |
-|(  -  ) /_/   |
+| / \__        |
+|(    @\___    |
+|/         o   |
 +--------------+
 """,
         "hungry": r"""
 +--------------+
-| /\_/\        |
-|( o.o )  /|   |
-|(  ~  ) /_/   |
+| / \__        |
+|(    @\___    |
+|/       ( )~  |
 +--------------+
 """,
         "tired": r"""
 +--------------+
-| /\_/\        |
-|( -.- )  /|   |
-|(  -  ) /_/   |
+| / \__        |
+|(   -@\___    |
+|/         z   |
 +--------------+
 """,
         "dirty": r"""
 +--------------+
-| /\_/\   . .  |
-|( x.x )  /|   |
-|(  ~  ) /_/   |
+| / \__   . .  |
+|(  x @\___    |
+|/    ~    o   |
 +--------------+
 """,
         "sick": r"""
 +--------------+
-| /\_/\  zz    |
-|( u.u )  /|   |
-|(  _  ) /_/   |
+| / \__  *     |
+|(  u @\___    |
+|/     _   o   |
 +--------------+
 """,
         "sad": r"""
 +--------------+
-| /\_/\        |
-|( T.T )  /|   |
-|(  _  ) /_/   |
+| / \__        |
+|(  T @\___    |
+|/        _    |
 +--------------+
 """
     },
@@ -175,6 +175,13 @@ PET_SKINS = {
 """
     }
 }
+
+def format_bar(label: str, value: int, max_value: int, width: int = 18) -> str:
+    max_value = max_value or 1
+    value = max(0, min(value, max_value))
+    filled = int((value / max_value) * width)
+    bar = "#" * filled + "-" * (width - filled)
+    return f"{label:<12} [{bar}] {value:>3}/{max_value}"
 
 
 class VirtualPetGUI:
@@ -319,6 +326,7 @@ class VirtualPetGUI:
         tk.Button(btn_frame, text="Play", command=self.play, **btn_style).grid(row=0, column=1, padx=6, pady=6)
         tk.Button(btn_frame, text="Sleep", command=self.sleep, **btn_style).grid(row=0, column=2, padx=6, pady=6)
         tk.Button(btn_frame, text="Advance Day", command=self.advance, **btn_style).grid(row=0, column=3, padx=6, pady=6)
+        tk.Button(btn_frame, text="Bathe/Shower", command=self.shower, **btn_style).grid(row=0, column=4, padx=6, pady=6)
 
         self.update_ui()
 
@@ -334,11 +342,11 @@ class VirtualPetGUI:
         self.stats_label.config(
             text=(
                 f"{self.pet.name} - {species.title()}\n"
-                f"Hunger:       {self.pet.hunger:>3}/{stats.hunger}\n"
-                f"Happiness:    {self.pet.happiness:>3}/{stats.happiness}\n"
-                f"Health:       {self.pet.health:>3}/{stats.health}\n"
-                f"Energy:       {self.pet.energy:>3}/{stats.energy}\n"
-                f"Cleanliness:  {self.pet.cleanliness:>3}/{stats.cleanliness}\n"
+                f"{format_bar('Hunger', self.pet.hunger, stats.hunger)}\n"
+                f"{format_bar('Happiness', self.pet.happiness, stats.happiness)}\n"
+                f"{format_bar('Health', self.pet.health, stats.health)}\n"
+                f"{format_bar('Energy', self.pet.energy, stats.energy)}\n"
+                f"{format_bar('Cleanliness', self.pet.cleanliness, stats.cleanliness)}\n"
                 f"Balance:      ${self.economy.balance}"
             )
         )
@@ -359,6 +367,11 @@ class VirtualPetGUI:
 
     def advance(self):
         self.pet.pass_time(1)
+        self.update_ui()
+
+    def shower(self):
+        if self.economy.spend("grooming", 8):
+            self.pet.shower(5)
         self.update_ui()
 
     def clear(self):

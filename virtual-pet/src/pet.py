@@ -25,7 +25,7 @@ class Pet:
     def pass_time(self, days=1):
         for _ in range(days):
             self.age_days += 1
-            self.hunger += 5
+            self.hunger -= 5
             self.happiness -= 3
             self.energy -= 4
             self.cleanliness -= 3
@@ -33,6 +33,7 @@ class Pet:
             if self.hunger < 20 or self.cleanliness < 20:
                 self.health -= 5            
             self.clamp_stats()
+            self.detectLoss()
             
     def get_emotional_state(self):
         if self.happiness > 70:
@@ -68,3 +69,8 @@ class Pet:
         self.hunger -= duration * 2
         self.happiness = min(100, self.happiness + duration)
         self.clamp_stats()
+
+    def detectLoss(self):
+        if self.health <= 0 or self.energy <= 0:
+            return True
+        return False

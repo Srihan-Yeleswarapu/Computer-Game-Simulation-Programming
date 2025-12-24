@@ -1,5 +1,5 @@
 # Main.py
-import ui-terminal-version
+import uiTermVer as ui
 from pet import Pet, petStats
 from economy import Economy
 import json 

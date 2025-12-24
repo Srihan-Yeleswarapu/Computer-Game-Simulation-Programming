@@ -53,7 +53,7 @@ class Pet:
             
     def sleep(self, duration):
         self.energy += duration * 10
-        self.hunfer -= duration * 2
+        self.hunger -= duration * 2
         self.energy = min(100, self.energy + duration * 10)
         self.clamp_stats()
 

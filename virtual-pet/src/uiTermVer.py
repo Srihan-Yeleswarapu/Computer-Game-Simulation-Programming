@@ -21,25 +21,24 @@ def title_screen():
     print("=" * 50)
     print("🐾 VIRTUAL PET SIMULATOR 🐾".center(50))
     print("=" * 50)
-    print("\nCare for your pet, manage money, and see how your")
-    print("choices affect its happiness and health.\n")
-    print("Press ENTER to begin...")
+    print("Don't just own a pet, experience the joy and responsibility of caring for a virtual companion!")
+    print("Press ENTER")
     input()
 
 # ---------- Pet Display ----------
 def show_pet(pet):
-    print("\n🐶 PET STATUS")
+    print("\n🐶 PET STAT")
     print("-" * 50)
     print(f"Name: {pet.name}")
     print(f"Type: {pet.pet_type}")
     print(f"Age:  {pet.age_days} days")
     print(f"State: {pet.get_emotional_state().upper()}\n")
 
-    print(progress_bar("Hunger", pet.hunger, pet.pet_type.hunger))
-    print(progress_bar("Happiness", pet.happiness, pet.pet_type.happiness))
-    print(progress_bar("Health", pet.health, pet.pet_type.health))
-    print(progress_bar("Energy", pet.energy, pet.pet_type.energy))
-    print(progress_bar("Cleanliness", pet.cleanliness, pet.pet_type.cleanliness))
+    print(progress_bar("hunger", pet.hunger, pet.pet_type.hunger))
+    print(progress_bar("happiness", pet.happiness, pet.pet_type.happiness))
+    print(progress_bar("health", pet.health, pet.pet_type.health))
+    print(progress_bar("energy", pet.energy, pet.pet_type.energy))
+    print(progress_bar("cleanliness", pet.cleanliness, pet.pet_type.cleanliness))
 # ---------- Economy Display ----------
 def show_economy(economy):
     print("\n💰 ECONOMY")
@@ -76,7 +75,7 @@ def game_over_screen(pet):
     clear_screen()
     print("💀 GAME OVER 💀".center(50))
     print("=" * 50)
-    print(f"\n{pet.name} could not be cared for anymore.")
-    print("Your choices matter.\n")
+    print(f"\n{pet.name} died, bcz you didn't treat it well.")
+    print("Your clearly messed something up. You should play more to get better at the game.")
     print("Thanks for playing!")
     pause(3)

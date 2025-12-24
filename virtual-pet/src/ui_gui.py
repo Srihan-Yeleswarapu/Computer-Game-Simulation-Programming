@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
-from pet import Pet
+from pet import Pet, petStats
 from economy import Economy
 
 BACKGROUND = "#0f172a"
@@ -176,6 +176,13 @@ PET_SKINS = {
     }
 }
 
+GUI_PET_PROFILES = {
+    "dog": petStats("dog", 10, 80, 70, 90),
+    "cat": petStats("cat", 5, 70, 60, 80),
+    # No preset existed in main.py for guinea pig; provide a balanced profile here
+    "guinea pig": petStats("guinea pig", 8, 75, 65, 70, 90),
+}
+
 def format_bar(label: str, value: int, max_value: int, width: int = 18) -> str:
     max_value = max_value or 1
     value = max(0, min(value, max_value))
@@ -231,7 +238,7 @@ class VirtualPetGUI:
 
         tk.Label(form, text="Pet Type", fg=TEXT_PRIMARY, bg=CARD_BG, font=("Consolas", 12, "bold")).grid(row=2, column=0, sticky="w")
         self.pet_type = tk.StringVar(value="dog")
-        pet_selector = tk.OptionMenu(form, self.pet_type, "dog", "cat", "guinea pig")
+        pet_selector = tk.OptionMenu(form, self.pet_type, *GUI_PET_PROFILES.keys())
         pet_selector.config(bg=INPUT_BG, fg=TEXT_PRIMARY, activebackground=BORDER, activeforeground=TEXT_PRIMARY, relief="flat", highlightthickness=0, font=("Consolas", 11))
         pet_selector["menu"].config(bg=INPUT_BG, fg=TEXT_PRIMARY, activebackground=BORDER, activeforeground=TEXT_PRIMARY, font=("Consolas", 11))
         pet_selector.grid(row=3, column=0, sticky="ew", pady=(4, 12))
@@ -260,7 +267,8 @@ class VirtualPetGUI:
             messagebox.showerror("Error", "Please give your pet a name.")
             return
 
-        self.pet = Pet(name, ptype)
+        profile = GUI_PET_PROFILES.get(ptype.lower(), petStats(ptype.lower()))
+        self.pet = Pet(name, profile)
         self.economy = Economy()
 
         self.create_game_screen()
@@ -355,28 +363,51 @@ class VirtualPetGUI:
         if self.economy.spend("food", 10):
             self.pet.feed(20)
         self.update_ui()
+        self.check_game_over()
 
     def play(self):
         if self.economy.spend("toys", 5):
             self.pet.play(10)
         self.update_ui()
+        self.check_game_over()
 
     def sleep(self):
         self.pet.sleep(5)
         self.update_ui()
+        self.check_game_over()
 
     def advance(self):
         self.pet.pass_time(1)
         self.update_ui()
+        self.check_game_over()
 
     def shower(self):
         if self.economy.spend("grooming", 8):
             self.pet.shower(5)
         self.update_ui()
+        self.check_game_over()
 
     def clear(self):
         for widget in self.root.winfo_children():
             widget.destroy()
+
+    def check_game_over(self):
+        if not self.pet.detectLoss():
+            return False
+        reason = "Your pet's wellbeing dropped too low."
+        if self.pet.hunger <= 5:
+            reason = "Hunger fell too low."
+        elif self.pet.energy <= 5:
+            reason = "Energy fell too low."
+        elif getattr(self.pet, "sad_streak", 0) >= 3:
+            reason = "Your pet stayed sad for too long."
+        elif self.pet.cleanliness <= 0:
+            reason = "Cleanliness hit zero."
+        elif self.pet.health <= 0:
+            reason = "Health collapsed."
+        messagebox.showinfo("Game Over", f"{self.pet.name} couldn't continue.\n{reason}")
+        self.root.destroy()
+        return True
 
 
 if __name__ == "__main__":

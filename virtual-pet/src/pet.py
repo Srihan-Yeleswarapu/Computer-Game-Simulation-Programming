@@ -33,6 +33,7 @@ class Pet:
         self.energy = 1 * self.pet_profile.energy
         self.cleanliness = 1 * self.pet_profile.cleanliness
         self.age_days = age_days
+        self.sad_streak = 0
         
     def clamp_stats(self):
         max_stats = self.pet_profile
@@ -52,8 +53,9 @@ class Pet:
             self.cleanliness -= 3
             
             if self.hunger < 20 or self.cleanliness < 20:
-                self.health -= 5            
+                self.health -= 5
             self.clamp_stats()
+            self._update_sad_streak()
             if(self.detectLoss()):
                 ui.game_over_screen(self.name)
                 
@@ -78,16 +80,19 @@ class Pet:
         self.hunger -= duration * 2
         self.energy = min(100, self.energy + duration * 10)
         self.clamp_stats()
+        self._update_sad_streak()
 
     def feed(self, amount):
         self.hunger += amount
         self.health += amount // 5
         self.clamp_stats()
+        self._update_sad_streak()
 
     def shower(self, amount):
         self.happiness -= amount *2
         self.cleanliness += amount * 4
         self.clamp_stats()
+        self._update_sad_streak()
 
     def play(self, duration):
         self.happiness += duration * 5
@@ -95,8 +100,20 @@ class Pet:
         self.hunger -= duration * 2
         self.happiness = min(100, self.happiness + duration)
         self.clamp_stats()
+        self._update_sad_streak()
+
+    def _update_sad_streak(self):
+        state = self.get_emotional_state()
+        if state == "sad":
+            self.sad_streak += 1
+        else:
+            self.sad_streak = 0
 
     def detectLoss(self):
-        if self.health <= 0 or self.energy <= 0 or self.happiness <= 0 or self.cleanliness<= 0:
+        # Critical thresholds: starvation, exhaustion, or prolonged sadness
+        critical_hunger = self.hunger <= 5
+        critical_energy = self.energy <= 5
+        too_sad = self.sad_streak >= 3
+        if self.health <= 0 or critical_hunger or critical_energy or self.happiness <= 0 or self.cleanliness<= 0 or too_sad:
             return True
         return False

@@ -1,6 +1,6 @@
 # Economy.py
 from collections import defaultdict
-import ui
+import ui-terminal-version
 
 class Economy:
     def __init__(self, starting_balance=1000):

@@ -1,7 +1,8 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, ttk
 from pet import Pet, petStats
 from economy import Economy
+from stock_market import StockMarket
 
 BACKGROUND = "#0f172a"
 CARD_BG = "#111827"
@@ -270,13 +271,28 @@ class VirtualPetGUI:
         profile = GUI_PET_PROFILES.get(ptype.lower(), petStats(ptype.lower()))
         self.pet = Pet(name, profile, use_terminal_ui=False)
         self.economy = Economy()
+        self.stock_market = StockMarket(self.economy)
 
         self.create_game_screen()
 
     def create_game_screen(self):
         self.clear()
 
-        container = tk.Frame(self.root, bg=BACKGROUND, padx=10, pady=10)
+        self.notebook = ttk.Notebook(self.root)
+        self.care_tab = tk.Frame(self.notebook, bg=BACKGROUND)
+        self.economy_tab = tk.Frame(self.notebook, bg=BACKGROUND)
+        self.notebook.add(self.care_tab, text="Care")
+        self.notebook.add(self.economy_tab, text="Economy")
+        self.notebook.pack(fill="both", expand=True)
+
+        self.build_care_tab()
+        self.build_economy_tab()
+
+        self.update_ui()
+        self.update_economy_ui()
+
+    def build_care_tab(self):
+        container = tk.Frame(self.care_tab, bg=BACKGROUND, padx=10, pady=10)
         container.pack(fill="both", expand=True)
 
         header = tk.Label(
@@ -336,7 +352,77 @@ class VirtualPetGUI:
         tk.Button(btn_frame, text="Advance Day", command=self.advance, **btn_style).grid(row=0, column=3, padx=6, pady=6)
         tk.Button(btn_frame, text="Bathe/Shower", command=self.shower, **btn_style).grid(row=0, column=4, padx=6, pady=6)
 
-        self.update_ui()
+    def build_economy_tab(self):
+        container = tk.Frame(self.economy_tab, bg=BACKGROUND, padx=16, pady=16)
+        container.pack(fill="both", expand=True)
+
+        header = tk.Label(
+            container,
+            text="Economy & Investments",
+            font=("Consolas", 18, "bold"),
+            fg=TEXT_PRIMARY,
+            bg=BACKGROUND
+        )
+        header.pack(anchor="w", pady=(0, 8))
+
+        top_row = tk.Frame(container, bg=BACKGROUND)
+        top_row.pack(fill="x", pady=(0, 10))
+
+        self.balance_label = tk.Label(top_row, text="", font=("Consolas", 12, "bold"), fg=TEXT_PRIMARY, bg=BACKGROUND)
+        self.balance_label.pack(side="left")
+
+        self.portfolio_label = tk.Label(top_row, text="", font=("Consolas", 12), fg=TEXT_SECONDARY, bg=BACKGROUND)
+        self.portfolio_label.pack(side="right")
+
+        market_card = tk.Frame(container, bg=CARD_BG, padx=14, pady=14, highlightbackground=BORDER, highlightthickness=1)
+        market_card.pack(fill="both", expand=True)
+
+        self.market_prices_label = tk.Label(market_card, text="", font=("Consolas", 11), fg=TEXT_PRIMARY, bg=CARD_BG, justify="left", anchor="nw")
+        self.market_prices_label.pack(fill="x")
+
+        control_row = tk.Frame(market_card, bg=CARD_BG, pady=10)
+        control_row.pack(fill="x")
+
+        tk.Label(control_row, text="Symbol", font=("Consolas", 11, "bold"), fg=TEXT_PRIMARY, bg=CARD_BG).grid(row=0, column=0, sticky="w")
+        tk.Label(control_row, text="Shares", font=("Consolas", 11, "bold"), fg=TEXT_PRIMARY, bg=CARD_BG).grid(row=0, column=1, sticky="w")
+
+        self.market_symbol = tk.StringVar(value="PAW")
+        symbols = list(self.stock_market.prices.keys())
+        symbol_menu = tk.OptionMenu(control_row, self.market_symbol, *symbols)
+        symbol_menu.config(bg=INPUT_BG, fg=TEXT_PRIMARY, activebackground=BORDER, activeforeground=TEXT_PRIMARY, relief="flat", highlightthickness=0, font=("Consolas", 11))
+        symbol_menu["menu"].config(bg=INPUT_BG, fg=TEXT_PRIMARY, activebackground=BORDER, activeforeground=TEXT_PRIMARY, font=("Consolas", 11))
+        symbol_menu.grid(row=1, column=0, padx=(0, 8), pady=(4, 0), sticky="ew")
+
+        self.shares_entry = tk.Entry(control_row, font=("Consolas", 11), bg=INPUT_BG, fg=TEXT_PRIMARY, insertbackground=TEXT_PRIMARY, relief="flat")
+        self.shares_entry.grid(row=1, column=1, padx=(0, 8), pady=(4, 0), sticky="ew")
+
+        action_style = {
+            "bg": BUTTON_BG,
+            "fg": TEXT_PRIMARY,
+            "activebackground": BUTTON_BG_ACTIVE,
+            "activeforeground": TEXT_PRIMARY,
+            "font": ("Consolas", 11, "bold"),
+            "relief": "flat",
+            "padx": 10,
+            "pady": 6,
+            "bd": 0
+        }
+
+        tk.Button(control_row, text="Buy", command=self.buy_stock, **action_style).grid(row=1, column=2, padx=4, sticky="ew")
+        tk.Button(control_row, text="Sell", command=self.sell_stock, **action_style).grid(row=1, column=3, padx=4, sticky="ew")
+        tk.Button(control_row, text="Market Tick", command=self.tick_market, **action_style).grid(row=1, column=4, padx=4, sticky="ew")
+        control_row.columnconfigure(0, weight=1)
+        control_row.columnconfigure(1, weight=1)
+
+        holdings_card = tk.Frame(market_card, bg=INPUT_BG, padx=12, pady=12, relief="ridge", bd=1)
+        holdings_card.pack(fill="both", expand=True, pady=(10, 0))
+
+        tk.Label(holdings_card, text="Holdings", font=("Consolas", 12, "bold"), fg=TEXT_PRIMARY, bg=INPUT_BG).pack(anchor="w")
+        self.holdings_label = tk.Label(holdings_card, text="", font=("Consolas", 11), fg=TEXT_PRIMARY, bg=INPUT_BG, justify="left", anchor="nw")
+        self.holdings_label.pack(fill="both", expand=True, pady=(6, 0))
+
+        self.market_message = tk.Label(market_card, text="", font=("Consolas", 10), fg=TEXT_SECONDARY, bg=CARD_BG, justify="left", anchor="w")
+        self.market_message.pack(fill="x", pady=(8, 0))
 
     def update_ui(self):
         state = self.pet.get_emotional_state()
@@ -358,6 +444,21 @@ class VirtualPetGUI:
                 f"Balance:      ${self.economy.balance}"
             )
         )
+        self.update_economy_ui()
+
+    def update_economy_ui(self):
+        if not hasattr(self, "stock_market"):
+            return
+        balance = self.economy.balance
+        portfolio = self.stock_market.portfolio_value()
+        self.balance_label.config(text=f"Balance: ${balance}")
+        self.portfolio_label.config(text=f"Portfolio: ${portfolio:,.2f}")
+
+        price_lines = [f"{sym:<4} ${price:>6.2f}" for sym, price in self.stock_market.prices.items()]
+        self.market_prices_label.config(text="\n".join(price_lines))
+
+        holding_lines = self.stock_market.holdings_lines()
+        self.holdings_label.config(text="\n".join(holding_lines))
 
     def feed(self):
         if self.economy.spend("food", 10):
@@ -387,6 +488,36 @@ class VirtualPetGUI:
         self.update_ui()
         self.check_game_over()
 
+    def buy_stock(self):
+        try:
+            shares = int(self.shares_entry.get() or "0")
+        except ValueError:
+            self.market_message.config(text="Enter a whole number of shares.", fg="#fca5a5")
+            return
+
+        success, msg = self.stock_market.buy(self.market_symbol.get(), shares)
+        self.market_message.config(text=msg, fg="#22c55e" if success else "#fca5a5")
+        self.update_economy_ui()
+        self.update_ui()
+
+    def sell_stock(self):
+        try:
+            shares = int(self.shares_entry.get() or "0")
+        except ValueError:
+            self.market_message.config(text="Enter a whole number of shares.", fg="#fca5a5")
+            return
+
+        success, msg = self.stock_market.sell(self.market_symbol.get(), shares)
+        self.market_message.config(text=msg, fg="#22c55e" if success else "#fca5a5")
+        self.update_economy_ui()
+        self.update_ui()
+
+    def tick_market(self):
+        self.stock_market.tick()
+        self.market_message.config(text="Market moved for a new day.", fg=TEXT_SECONDARY)
+        self.update_economy_ui()
+        self.update_ui()
+
     def clear(self):
         for widget in self.root.winfo_children():
             widget.destroy()
@@ -395,7 +526,7 @@ class VirtualPetGUI:
         if not self.pet.detectLoss():
             return False
         reason = getattr(self.pet, "last_death_reason", "") or "Your pet's wellbeing dropped too low."
-        messagebox.showinfo("Game Over", f"{self.pet.name} couldn't continue bcz ur skill is so low.\n{reason}")
+        messagebox.showinfo("Game Over", f"{self.pet.name} couldn't continue.\n{reason}")
         self.root.destroy()
         return True
 

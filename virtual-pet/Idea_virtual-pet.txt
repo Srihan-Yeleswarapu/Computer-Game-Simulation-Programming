@@ -1,17 +1,22 @@
-Game Topic: Career Quest
-
-Create an engaging game where players jump into mini-worlds that showcase different careers. In each career world, players must:
-
-• Experience a short scenario that captures what the job is like
-• Complete skill-based challenges and tasks unique to that profession
-
-The game must:
-
-• Be playable on a device using Windows 10, Mac OS, a modern web browser, or a mobile platform
-• Be secure
-• Have no game-breaking bugs
-
-By the end, players will discover what each career involves and the skills they’ll need to succeed.
+Build a Virtual Pet
+Use your programming skills to create a digital pet that users can name, feed, and care for
+over time. Your pet should respond to how well it is treated, showing emotions, changing
+appearance or behavior, and developing based on the user’s actions.
+To expand your program, include a "cost of care" system to teach users about the financial
+responsibility of pet ownership. Track things like:
+    • Food and supply costs
+    • Vet visits or health care
+    • Toy or activity purchases
+    • Budget limits or in-game currency
+Your program should include:
+    • Customization (user names the pet, chooses type, etc.)
+    • Pet care features (feed, play, rest, clean, health check)
+    • Reactions based on care level (happy, sick, sad, energetic)
+    • A running total of care-related expenses
+    • Optional: savings goals or earning systems (e.g., chores or tasks to earn pet care funds)
+Encourage creativity in how the pet grows or changes over time: Could it evolve, learn tricks,
+or earn badges? Use any programming language or environment that demonstrates your
+understanding of basic logic, variables, conditionals, and functions.
 
 
 Rubric:

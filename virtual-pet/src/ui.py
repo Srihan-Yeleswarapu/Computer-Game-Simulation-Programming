@@ -35,12 +35,11 @@ def show_pet(pet):
     print(f"Age:  {pet.age_days} days")
     print(f"State: {pet.get_emotional_state().upper()}\n")
 
-    print(progress_bar("Hunger", pet.hunger))
-    print(progress_bar("Happiness", pet.happiness))
-    print(progress_bar("Health", pet.health))
-    print(progress_bar("Energy", pet.energy))
-    print(progress_bar("Cleanliness", pet.cleanliness))
-
+    print(progress_bar("Hunger", pet.hunger, pet.pet_type.hunger))
+    print(progress_bar("Happiness", pet.happiness, pet.pet_type.happiness))
+    print(progress_bar("Health", pet.health, pet.pet_type.health))
+    print(progress_bar("Energy", pet.energy, pet.pet_type.energy))
+    print(progress_bar("Cleanliness", pet.cleanliness, pet.pet_type.cleanliness))
 # ---------- Economy Display ----------
 def show_economy(economy):
     print("\n💰 ECONOMY")

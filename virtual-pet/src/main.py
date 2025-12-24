@@ -1,11 +1,11 @@
 # Main.py
 import ui
-from pet import Pet
+from pet import Pet, petStats
 from economy import Economy
 import json 
 import random
 
-
+validPets = [petStats("dog", 10, 80, 70, 90), petStats("cat", 5, 70, 60, 80), petStats("dragon", 15, 90, 80, 100)]
 ui.title_screen()
 
 def print_pet_status(pet: Pet):
@@ -23,7 +23,16 @@ def print_pet_status(pet: Pet):
 # --- Save/Load Functions ---
 def save_game(pet, economy, filename="save.json"):
     data = {
-        "pet": pet.__dict__,
+        "pet": {
+            "name": pet.name,
+            "pet_type": pet.pet_type.type,
+            "age_days": pet.age_days,
+            "hunger": pet.hunger,
+            "happiness": pet.happiness,
+            "health": pet.health,
+            "energy": pet.energy,
+            "cleanliness": pet.cleanliness
+        },
         "economy": {
             "balance": economy.balance,
             "expenses": economy.expenses
@@ -37,8 +46,8 @@ def load_game(filename="save.json"):
         data = json.load(f)
     pet_data = data["pet"]
     economy_data = data["economy"]
-    
-    pet = Pet(pet_data["name"], pet_data["pet_type"], pet_data["age_days"])
+
+    pet = Pet(pet_data["name"], [pet for pet in validPets if pet.type == pet_data["pet_type"]][0], pet_data["age_days"])
     pet.hunger = pet_data["hunger"]
     pet.happiness = pet_data["happiness"]
     pet.health = pet_data["health"]
@@ -67,7 +76,10 @@ def main():
     # Create pet and economy
     name = input("Enter your pet's name: ")
     pet_type = input("Enter pet type (e.g., dog, cat, dragon): ")
-    pet = Pet(name, pet_type)
+    while(pet_type.lower() not in [pet.type for pet in validPets]):
+        pet_type = input("Enter pet type (e.g., dog, cat, dragon): ")
+    petStat = [pet for pet in validPets if pet.type == pet_type.lower()][0]
+    pet = Pet(name, petStat, age_days=0)
     economy = Economy(starting_balance=1000)
 
     while True:

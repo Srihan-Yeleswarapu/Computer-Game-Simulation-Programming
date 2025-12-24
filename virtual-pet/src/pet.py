@@ -1,25 +1,36 @@
 # Pet.py
 import ui
+from dataclasses import dataclass
+from enum import Enum
 
+
+@dataclass
+class petStats:
+    type: str
+    hunger: int = 100
+    happiness: int = 100
+    health: int = 100
+    energy: int = 100
+    cleanliness: int = 100
 class Pet:
-    def __init__(self, name:str, pet_type:str, age_days:int=0):
+    def __init__(self, name:str, pet_type:petStats, age_days:int=0):
         self.name = name
         
         
         self.pet_type = pet_type
-        self.hunger = 100
-        self.happiness = 100
-        self.health = 100
-        self.energy = 100
-        self.cleanliness = 100
+        self.hunger = 1 * pet_type.hunger
+        self.happiness = 1 * pet_type.happiness
+        self.health = 1 * pet_type.health
+        self.energy = 1 * pet_type.energy
+        self.cleanliness = 1 * pet_type.cleanliness
         self.age_days = age_days
         
     def clamp_stats(self):
-        self.hunger = max(0, min(100, self.hunger))
-        self.happiness = max(0, min(100, self.happiness))
-        self.health = max(0, min(100, self.health))
-        self.energy = max(0, min(100, self.energy))
-        self.cleanliness = max(0, min(100, self.cleanliness))
+        self.hunger = max(0, min(1 * self.pet_type.hunger, self.hunger))
+        self.happiness = max(0, min(1 * self.pet_type.happiness, self.happiness))
+        self.health = max(0, min(1 * self.pet_type.health, self.health))
+        self.energy = max(0, min(1 * self.pet_type.energy, self.energy))
+        self.cleanliness = max(0, min(1 * self.pet_type.cleanliness, self.cleanliness))
         self.age_days = max(0, self.age_days)
         
     def pass_time(self, days=1):

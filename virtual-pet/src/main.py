@@ -71,8 +71,11 @@ def main():
     economy = Economy(starting_balance=1000)
 
     while True:
-        print(pet)
-        print(f"Current Balance: ${economy.get_balance()}")
+        ui.clear_screen()
+        ui.show_pet(pet)
+        ui.show_economy(economy)
+        ui.show_menu()
+
         print("\nActions:")
         print("1. Feed pet ($10 per feed)")
         print("2. Play with pet ($5 per play)")

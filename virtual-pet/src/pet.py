@@ -60,7 +60,6 @@ class Pet:
     def feed(self, amount):
         self.hunger += amount
         self.health += amount // 5
-        self.hunger = max(0, self.hunger - amount)
         self.clamp_stats()
 
     def play(self, duration):

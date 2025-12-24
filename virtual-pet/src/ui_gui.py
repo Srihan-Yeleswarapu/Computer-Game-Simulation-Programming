@@ -268,7 +268,7 @@ class VirtualPetGUI:
             return
 
         profile = GUI_PET_PROFILES.get(ptype.lower(), petStats(ptype.lower()))
-        self.pet = Pet(name, profile)
+        self.pet = Pet(name, profile, use_terminal_ui=False)
         self.economy = Economy()
 
         self.create_game_screen()
@@ -394,17 +394,7 @@ class VirtualPetGUI:
     def check_game_over(self):
         if not self.pet.detectLoss():
             return False
-        reason = "Your pet's wellbeing dropped too low."
-        if self.pet.hunger <= 5:
-            reason = "Hunger fell too low."
-        elif self.pet.energy <= 5:
-            reason = "Energy fell too low."
-        elif getattr(self.pet, "sad_streak", 0) >= 3:
-            reason = "Your pet stayed sad for too long."
-        elif self.pet.cleanliness <= 0:
-            reason = "Cleanliness hit zero."
-        elif self.pet.health <= 0:
-            reason = "Health collapsed."
+        reason = getattr(self.pet, "last_death_reason", "") or "Your pet's wellbeing dropped too low."
         messagebox.showinfo("Game Over", f"{self.pet.name} couldn't continue.\n{reason}")
         self.root.destroy()
         return True

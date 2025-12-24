@@ -2,7 +2,7 @@
 import uiTermVer as ui
 from dataclasses import dataclass
 from enum import Enum
-from typing import Union
+from typing import Optional, Union
 
 
 @dataclass
@@ -14,7 +14,7 @@ class petStats:
     energy: int = 100
     cleanliness: int = 100
 class Pet:
-    def __init__(self, name: str, pet_type: Union[petStats, str], age_days: int = 0):
+    def __init__(self, name: str, pet_type: Union[petStats, str], age_days: int = 0, use_terminal_ui: bool = True):
         self.name = name
 
         # Accept either a predefined petStats profile or a simple species string (GUI uses strings)
@@ -34,6 +34,8 @@ class Pet:
         self.cleanliness = 1 * self.pet_profile.cleanliness
         self.age_days = age_days
         self.sad_streak = 0
+        self.last_death_reason = ""
+        self.use_terminal_ui = use_terminal_ui
         
     def clamp_stats(self):
         max_stats = self.pet_profile
@@ -56,8 +58,8 @@ class Pet:
                 self.health -= 5
             self.clamp_stats()
             self._update_sad_streak()
-            if(self.detectLoss()):
-                ui.game_over_screen(self.name)
+            if self.detectLoss(trigger_ui=self.use_terminal_ui):
+                break
                 
             
     def get_emotional_state(self):
@@ -109,11 +111,32 @@ class Pet:
         else:
             self.sad_streak = 0
 
-    def detectLoss(self):
-        # Critical thresholds: starvation, exhaustion, or prolonged sadness
-        critical_hunger = self.hunger <= 5
-        critical_energy = self.energy <= 5
-        too_sad = self.sad_streak >= 3
-        if self.health <= 0 or critical_hunger or critical_energy or self.happiness <= 0 or self.cleanliness<= 0 or too_sad:
-            return True
-        return False
+    def detectLoss(self, trigger_ui: Optional[bool] = None) -> bool:
+        """
+        Returns True if the pet has reached a loss condition.
+        When trigger_ui is True (used by the terminal UI), it will call the UI game over screen if available.
+        """
+        if trigger_ui is None:
+            trigger_ui = self.use_terminal_ui
+        reason = ""
+        if self.health <= 0:
+            reason = "Health collapsed."
+        elif self.hunger <= 5:
+            reason = "Hunger fell too low."
+        elif self.energy <= 5:
+            reason = "Energy fell too low."
+        elif self.happiness <= 0:
+            reason = "Happiness hit zero."
+        elif self.cleanliness <= 0:
+            reason = "Cleanliness hit zero."
+        elif self.sad_streak >= 3:
+            reason = "Stayed sad for too long."
+
+        self.last_death_reason = reason
+
+        if not reason:
+            return False
+
+        if trigger_ui and hasattr(ui, "game_over_screen"):
+            ui.game_over_screen(self.name)
+        return True

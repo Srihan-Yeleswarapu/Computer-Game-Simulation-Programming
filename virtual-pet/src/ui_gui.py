@@ -374,6 +374,9 @@ class VirtualPetGUI:
         self.portfolio_label = tk.Label(top_row, text="", font=("Consolas", 12), fg=TEXT_SECONDARY, bg=BACKGROUND)
         self.portfolio_label.pack(side="right")
 
+        self.profit_label = tk.Label(container, text="", font=("Consolas", 12, "bold"), fg=TEXT_PRIMARY, bg=BACKGROUND)
+        self.profit_label.pack(anchor="w", pady=(0, 6))
+
         market_card = tk.Frame(container, bg=CARD_BG, padx=14, pady=14, highlightbackground=BORDER, highlightthickness=1)
         market_card.pack(fill="both", expand=True)
 
@@ -417,8 +420,20 @@ class VirtualPetGUI:
         holdings_card.pack(fill="both", expand=True, pady=(10, 0))
 
         tk.Label(holdings_card, text="Holdings", font=("Consolas", 12, "bold"), fg=TEXT_PRIMARY, bg=INPUT_BG).pack(anchor="w")
-        self.holdings_label = tk.Label(holdings_card, text="", font=("Consolas", 11), fg=TEXT_PRIMARY, bg=INPUT_BG, justify="left", anchor="nw")
-        self.holdings_label.pack(fill="both", expand=True, pady=(6, 0))
+        self.holdings_text = tk.Text(
+            holdings_card,
+            font=("Consolas", 11),
+            fg=TEXT_PRIMARY,
+            bg=INPUT_BG,
+            relief="flat",
+            height=8,
+            wrap="none"
+        )
+        self.holdings_text.pack(fill="both", expand=True, pady=(6, 0))
+        self.holdings_text.config(state="disabled")
+        self.holdings_text.tag_configure("gain", foreground="#22c55e")
+        self.holdings_text.tag_configure("loss", foreground="#f87171")
+        self.holdings_text.tag_configure("neutral", foreground=TEXT_PRIMARY)
 
         self.market_message = tk.Label(market_card, text="", font=("Consolas", 10), fg=TEXT_SECONDARY, bg=CARD_BG, justify="left", anchor="w")
         self.market_message.pack(fill="x", pady=(8, 0))
@@ -450,14 +465,25 @@ class VirtualPetGUI:
             return
         balance = self.economy.balance
         portfolio = self.stock_market.portfolio_value()
+        total_profit = self.stock_market.total_profit()
         self.balance_label.config(text=f"Balance: ${balance}")
         self.portfolio_label.config(text=f"Portfolio: ${portfolio:,.2f}")
+        self.profit_label.config(text=f"Total P/L: ${total_profit:,.2f}", fg="#22c55e" if total_profit > 0 else ("#f87171" if total_profit < 0 else TEXT_PRIMARY))
 
         price_lines = [f"{sym:<4} ${price:>6.2f}" for sym, price in self.stock_market.prices.items()]
         self.market_prices_label.config(text="\n".join(price_lines))
 
         holding_lines = self.stock_market.holdings_lines()
-        self.holdings_label.config(text="\n".join(holding_lines))
+        self.holdings_text.config(state="normal")
+        self.holdings_text.delete("1.0", "end")
+        for line, pl in holding_lines:
+            tag = "neutral"
+            if pl > 0:
+                tag = "gain"
+            elif pl < 0:
+                tag = "loss"
+            self.holdings_text.insert("end", line + "\n", tag)
+        self.holdings_text.config(state="disabled")
 
     def feed(self):
         if self.economy.spend("food", 10):

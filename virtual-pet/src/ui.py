@@ -57,11 +57,12 @@ def show_menu():
     print("1. Feed pet ($10)")
     print("2. Play with pet ($5)")
     print("3. Sleep")
-    print("4. Advance time")
-    print("5. Show expenses")
-    print("6. Save game")
-    print("7. Load game")
-    print("8. Quit")
+    print("4. Bath")
+    print("5. Advance time")
+    print("6. Show expenses")
+    print("7. Save game")
+    print("8. Load game")
+    print("9. Quit")
 
 # ---------- Messages ----------
 def success(msg):

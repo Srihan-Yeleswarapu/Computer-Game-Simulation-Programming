@@ -33,7 +33,9 @@ class Pet:
             if self.hunger < 20 or self.cleanliness < 20:
                 self.health -= 5            
             self.clamp_stats()
-            self.detectLoss()
+            if(self.detectLoss()):
+                ui.game_over_screen(self.name)
+                
             
     def get_emotional_state(self):
         if self.happiness > 70:
@@ -62,6 +64,11 @@ class Pet:
         self.health += amount // 5
         self.clamp_stats()
 
+    def shower(self, amount):
+        self.happiness -= amount *2
+        self.cleanliness += amount * 4
+        self.clamp_stats()
+
     def play(self, duration):
         self.happiness += duration * 5
         self.energy -= duration * 3
@@ -70,6 +77,6 @@ class Pet:
         self.clamp_stats()
 
     def detectLoss(self):
-        if self.health <= 0 or self.energy <= 0:
+        if self.health <= 0 or self.energy <= 0 or self.happiness <= 0 or self.cleanliness<= 0:
             return True
         return False

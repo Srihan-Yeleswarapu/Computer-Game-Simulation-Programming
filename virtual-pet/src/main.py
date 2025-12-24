@@ -113,26 +113,33 @@ def main():
             save_game(pet, economy)
             ui.success("Game saved successfully!")
         elif choice == "4":
+            duration = get_int_input("Enter minutes of bath: ", 1, 30)
+            pet.shower(duration)
+            print(f"{pet.name} took a bath for {duration} minutes.")
+            random_event(pet, economy)
+            save_game(pet, economy)
+            ui.success("Game saved successfully!")
+        elif choice == "5":
             days = get_int_input("Advance how many days? ", 1)
             pet.pass_time(days)
             print(f"{days} day(s) have passed.")
             random_event(pet, economy)
             save_game(pet, economy)
             ui.success("Game saved successfully!")
-        elif choice == "5":
+        elif choice == "6":
             economy.report()
             save_game(pet, economy)
             ui.success("Game saved successfully!")
-        elif choice == "6":
+        elif choice == "7":
             save_game(pet, economy)
             ui.success("Game saved successfully!")
-        elif choice == "7":
+        elif choice == "8":
             try:
                 pet, economy = load_game()
                 print("Game loaded successfully!")
             except FileNotFoundError:
                 ui.warning("No save file found.")
-        elif choice == "8":
+        elif choice == "9":
             print("Exiting the game. Goodbye!")
             break
         else:

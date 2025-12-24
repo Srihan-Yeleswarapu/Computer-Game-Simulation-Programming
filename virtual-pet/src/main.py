@@ -1,4 +1,5 @@
 # Main.py
+import ui
 from pet import Pet
 from economy import Economy
 import json 

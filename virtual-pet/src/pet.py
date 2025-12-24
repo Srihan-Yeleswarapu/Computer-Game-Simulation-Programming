@@ -1,4 +1,6 @@
 # Pet.py
+import ui
+
 class Pet:
     def __init__(self, name:str, pet_type:str, age_days:int=0):
         self.name = name

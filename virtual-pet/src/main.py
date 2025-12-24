@@ -5,6 +5,9 @@ from economy import Economy
 import json 
 import random
 
+
+ui.title_screen()
+
 def print_pet_status(pet: Pet):
     print(f"Pet Name: {pet.name}")
     print(f"Type: {pet.pet_type}")

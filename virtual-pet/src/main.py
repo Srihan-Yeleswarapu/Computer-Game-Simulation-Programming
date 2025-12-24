@@ -1,5 +1,5 @@
 # Main.py
-import ui
+import ui-terminal-version
 from pet import Pet, petStats
 from economy import Economy
 import json 

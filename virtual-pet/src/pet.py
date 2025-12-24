@@ -64,6 +64,11 @@ class Pet:
         self.health += amount // 5
         self.clamp_stats()
 
+    def shower(self, amount):
+        self.happiness -= amount *2
+        self.cleanliness += amount * 4
+        self.clamp_stats()
+
     def play(self, duration):
         self.happiness += duration * 5
         self.energy -= duration * 3

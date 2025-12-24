@@ -20,6 +20,7 @@ class StockMarket:
             "BONE": 20.0,
             "NUT": 15.0,
         }
+        self.history = {symbol: [(0, price)] for symbol, price in self.prices.items()}
         self.holdings = defaultdict(int)
         # Track cumulative cost for average price and realized profit
         self.holdings_cost = defaultdict(float)
@@ -52,6 +53,7 @@ class StockMarket:
             # Slowly mean-revert momentum so it doesn't explode upwards forever
             self.momentum[symbol] = max(-0.1, min(0.08, self.momentum.get(symbol, 0.0) * 0.9 + random.uniform(-0.01, 0.02)))
             self.prices[symbol] = new_price
+            self.history.setdefault(symbol, []).append((self.day, new_price))
         return self.prices
 
     def buy(self, symbol: str, shares: int) -> Tuple[bool, str]:
@@ -110,6 +112,9 @@ class StockMarket:
 
     def total_profit(self) -> float:
         return round(self.realized_profit + self.unrealized_profit(), 2)
+
+    def price_history(self) -> Dict[str, list]:
+        return self.history
 
     def holdings_lines(self):
         lines = []

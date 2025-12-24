@@ -14,6 +14,12 @@ ACCENT = "#22c55e"
 ACCENT_DARK = "#16a34a"
 BUTTON_BG = "#2563eb"
 BUTTON_BG_ACTIVE = "#1d4ed8"
+STOCK_COLORS = {
+    "PAW": "#60a5fa",
+    "MEOW": "#f472b6",
+    "BONE": "#a78bfa",
+    "NUT": "#fbbf24",
+}
 
 # =========================
 # ASCII PET SKINS
@@ -281,12 +287,15 @@ class VirtualPetGUI:
         self.notebook = ttk.Notebook(self.root)
         self.care_tab = tk.Frame(self.notebook, bg=BACKGROUND)
         self.economy_tab = tk.Frame(self.notebook, bg=BACKGROUND)
+        self.chart_tab = tk.Frame(self.notebook, bg=BACKGROUND)
         self.notebook.add(self.care_tab, text="Care")
         self.notebook.add(self.economy_tab, text="Economy")
+        self.notebook.add(self.chart_tab, text="Charts")
         self.notebook.pack(fill="both", expand=True)
 
         self.build_care_tab()
         self.build_economy_tab()
+        self.build_chart_tab()
 
         self.update_ui()
         self.update_economy_ui()
@@ -438,6 +447,23 @@ class VirtualPetGUI:
         self.market_message = tk.Label(market_card, text="", font=("Consolas", 10), fg=TEXT_SECONDARY, bg=CARD_BG, justify="left", anchor="w")
         self.market_message.pack(fill="x", pady=(8, 0))
 
+    def build_chart_tab(self):
+        container = tk.Frame(self.chart_tab, bg=BACKGROUND, padx=16, pady=16)
+        container.pack(fill="both", expand=True)
+
+        header = tk.Label(
+            container,
+            text="Market Charts",
+            font=("Consolas", 18, "bold"),
+            fg=TEXT_PRIMARY,
+            bg=BACKGROUND
+        )
+        header.pack(anchor="w", pady=(0, 8))
+
+        self.chart_canvas = tk.Canvas(container, bg="#0b1220", highlightthickness=1, highlightbackground=BORDER)
+        self.chart_canvas.pack(fill="both", expand=True)
+        self.chart_canvas.bind("<Configure>", lambda e: self.draw_chart())
+
     def update_ui(self):
         state = self.pet.get_emotional_state()
         species = getattr(self.pet, "species", getattr(self.pet.pet_type, "type", "dog")).lower()
@@ -484,6 +510,7 @@ class VirtualPetGUI:
                 tag = "loss"
             self.holdings_text.insert("end", line + "\n", tag)
         self.holdings_text.config(state="disabled")
+        self.draw_chart()
 
     def feed(self):
         if self.economy.spend("food", 10):
@@ -543,6 +570,61 @@ class VirtualPetGUI:
     def tick_market(self):
         # Manual ticks are disabled; market moves with Advance Day
         self.market_message.config(text="Advance the day to move the market.", fg=TEXT_SECONDARY)
+
+    def draw_chart(self):
+        if not hasattr(self, "chart_canvas") or not hasattr(self, "stock_market"):
+            return
+        canvas = self.chart_canvas
+        canvas.delete("all")
+
+        history = self.stock_market.price_history()
+        if not history:
+            return
+
+        # Determine bounds
+        all_points = [(day, price) for points in history.values() for day, price in points]
+        if not all_points:
+            return
+        min_day = min(d for d, _ in all_points)
+        max_day = max(d for d, _ in all_points)
+        min_price = min(p for _, p in all_points)
+        max_price = max(p for _, p in all_points)
+
+        width = canvas.winfo_width() or 800
+        height = canvas.winfo_height() or 400
+        pad = 40
+
+        def x_scale(day):
+            if max_day == min_day:
+                return pad
+            return pad + (day - min_day) / (max_day - min_day) * (width - 2 * pad)
+
+        def y_scale(price):
+            if max_price == min_price:
+                return height - pad
+            return height - pad - (price - min_price) / (max_price - min_price) * (height - 2 * pad)
+
+        # Axes
+        canvas.create_line(pad, height - pad, width - pad, height - pad, fill=TEXT_SECONDARY)
+        canvas.create_line(pad, pad, pad, height - pad, fill=TEXT_SECONDARY)
+
+        # Labels
+        canvas.create_text(pad, pad - 10, text=f"Max ${max_price:.2f}", fill=TEXT_PRIMARY, anchor="w", font=("Consolas", 10))
+        canvas.create_text(pad, height - pad + 10, text=f"Min ${min_price:.2f}", fill=TEXT_PRIMARY, anchor="w", font=("Consolas", 10))
+        canvas.create_text(width - pad, height - pad + 10, text=f"Day {max_day}", fill=TEXT_PRIMARY, anchor="e", font=("Consolas", 10))
+
+        # Plot lines
+        for symbol, points in history.items():
+            if len(points) < 2:
+                continue
+            color = STOCK_COLORS.get(symbol, TEXT_PRIMARY)
+            coords = []
+            for day, price in points:
+                coords.extend([x_scale(day), y_scale(price)])
+            canvas.create_line(*coords, fill=color, width=2, smooth=True)
+            # Legend item
+            canvas.create_rectangle(width - pad - 120, pad + 10 * list(history.keys()).index(symbol), width - pad - 105, pad + 10 * list(history.keys()).index(symbol) + 10, fill=color, outline=color)
+            canvas.create_text(width - pad - 95, pad + 10 * list(history.keys()).index(symbol) + 5, text=symbol, fill=TEXT_PRIMARY, anchor="w", font=("Consolas", 9))
 
     def clear(self):
         for widget in self.root.winfo_children():

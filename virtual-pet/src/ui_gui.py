@@ -634,7 +634,7 @@ class VirtualPetGUI:
         if not self.pet.detectLoss():
             return False
         reason = getattr(self.pet, "last_death_reason", "") or "Your pet's wellbeing dropped too low."
-        messagebox.showinfo("Game Over", f"{self.pet.name} couldn't continue.\n{reason}")
+        messagebox.showinfo("Game Over", f"{self.pet.name} has died.\n{reason}")
         self.root.destroy()
         return True
 

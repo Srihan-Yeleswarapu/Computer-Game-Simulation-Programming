@@ -1,5 +1,5 @@
 # Pet.py
-import ui
+import ui-terminal-version
 from dataclasses import dataclass
 from enum import Enum
 

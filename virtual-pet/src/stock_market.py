@@ -116,6 +116,34 @@ class StockMarket:
     def price_history(self) -> Dict[str, list]:
         return self.history
 
+    def moving_average(self, symbol: str, window: int = 3):
+        points = self.history.get(symbol, [])
+        averages = []
+        for i in range(len(points)):
+            if i + 1 < window:
+                continue
+            window_points = points[i + 1 - window : i + 1]
+            avg = sum(p for _, p in window_points) / window
+            averages.append((points[i][0], round(avg, 2)))
+        return averages
+
+    def predict(self, symbol: str, days_ahead: int = 5):
+        """Simple momentum-based projection; not guaranteed."""
+        points = self.history.get(symbol, [])
+        if len(points) < 2:
+            return []
+        last_day, last_price = points[-1]
+        prev_day, prev_price = points[-2]
+        slope = (last_price - prev_price) / max(1, (last_day - prev_day))
+        momentum = self.momentum.get(symbol, 0.0)
+        proj = []
+        price = last_price
+        for i in range(1, days_ahead + 1):
+            # carry forward slope plus momentum nudge, dampen to avoid runaway
+            price = max(0.5, price * (1 + momentum * 0.5) + slope * 0.6)
+            proj.append((last_day + i, round(price, 2)))
+        return proj
+
     def holdings_lines(self):
         lines = []
         for symbol, shares in sorted(self.holdings.items()):

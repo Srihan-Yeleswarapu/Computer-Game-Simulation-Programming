@@ -20,6 +20,8 @@ STOCK_COLORS = {
     "BONE": "#a78bfa",
     "NUT": "#fbbf24",
 }
+PRED_COLOR = "#f97316"
+MA_COLOR = "#10b981"
 
 # =========================
 # ASCII PET SKINS
@@ -582,13 +584,15 @@ class VirtualPetGUI:
             return
 
         # Determine bounds
+        projections = {sym: self.stock_market.predict(sym) for sym in history}
         all_points = [(day, price) for points in history.values() for day, price in points]
+        all_proj_points = [(day, price) for points in projections.values() for day, price in points]
         if not all_points:
             return
         min_day = min(d for d, _ in all_points)
-        max_day = max(d for d, _ in all_points)
-        min_price = min(p for _, p in all_points)
-        max_price = max(p for _, p in all_points)
+        max_day = max(d for d, _ in all_points + all_proj_points) if all_proj_points else max(d for d, _ in all_points)
+        min_price = min(p for _, p in all_points + all_proj_points) if all_proj_points else min(p for _, p in all_points)
+        max_price = max(p for _, p in all_points + all_proj_points) if all_proj_points else max(p for _, p in all_points)
 
         width = canvas.winfo_width() or 800
         height = canvas.winfo_height() or 400
@@ -614,17 +618,50 @@ class VirtualPetGUI:
         canvas.create_text(width - pad, height - pad + 10, text=f"Day {max_day}", fill=TEXT_PRIMARY, anchor="e", font=("Consolas", 10))
 
         # Plot lines
-        for symbol, points in history.items():
-            if len(points) < 2:
-                continue
-            color = STOCK_COLORS.get(symbol, TEXT_PRIMARY)
-            coords = []
-            for day, price in points:
-                coords.extend([x_scale(day), y_scale(price)])
-            canvas.create_line(*coords, fill=color, width=2, smooth=True)
+        symbols_order = list(history.keys())
+        for idx, symbol in enumerate(symbols_order):
+            points = history.get(symbol, [])
+            if len(points) >= 2:
+                color = STOCK_COLORS.get(symbol, TEXT_PRIMARY)
+                coords = []
+                for day, price in points:
+                    coords.extend([x_scale(day), y_scale(price)])
+                canvas.create_line(*coords, fill=color, width=2, smooth=True)
+
+            # Moving average line
+            ma_points = self.stock_market.moving_average(symbol)
+            if len(ma_points) >= 2:
+                ma_coords = []
+                for day, price in ma_points:
+                    ma_coords.extend([x_scale(day), y_scale(price)])
+                canvas.create_line(*ma_coords, fill=MA_COLOR, width=1, dash=(3, 3))
+
+            # Prediction line
+            proj_points = projections.get(symbol, [])
+            if proj_points:
+                # Connect forecast to last known point for continuity
+                start_chain = []
+                if points:
+                    start_chain.append(points[-1])
+                start_chain.extend(proj_points)
+                if len(start_chain) >= 2:
+                    proj_coords = []
+                    for day, price in start_chain:
+                        proj_coords.extend([x_scale(day), y_scale(price)])
+                    canvas.create_line(*proj_coords, fill=PRED_COLOR, width=1, dash=(4, 4))
+
             # Legend item
-            canvas.create_rectangle(width - pad - 120, pad + 10 * list(history.keys()).index(symbol), width - pad - 105, pad + 10 * list(history.keys()).index(symbol) + 10, fill=color, outline=color)
-            canvas.create_text(width - pad - 95, pad + 10 * list(history.keys()).index(symbol) + 5, text=symbol, fill=TEXT_PRIMARY, anchor="w", font=("Consolas", 9))
+            legend_y = pad + 14 * idx
+            color = STOCK_COLORS.get(symbol, TEXT_PRIMARY)
+            canvas.create_rectangle(width - pad - 140, legend_y, width - pad - 125, legend_y + 10, fill=color, outline=color)
+            canvas.create_text(width - pad - 115, legend_y + 5, text=symbol, fill=TEXT_PRIMARY, anchor="w", font=("Consolas", 9))
+
+        # Legend for indicators
+        legend_base = pad + 14 * (len(symbols_order) + 1)
+        canvas.create_rectangle(width - pad - 140, legend_base, width - pad - 125, legend_base + 10, fill=MA_COLOR, outline=MA_COLOR)
+        canvas.create_text(width - pad - 115, legend_base + 5, text="MA", fill=TEXT_PRIMARY, anchor="w", font=("Consolas", 9))
+        canvas.create_rectangle(width - pad - 140, legend_base + 14, width - pad - 125, legend_base + 24, fill=PRED_COLOR, outline=PRED_COLOR)
+        canvas.create_text(width - pad - 115, legend_base + 19, text="Forecast", fill=TEXT_PRIMARY, anchor="w", font=("Consolas", 9))
 
     def clear(self):
         for widget in self.root.winfo_children():

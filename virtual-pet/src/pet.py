@@ -72,6 +72,6 @@ class Pet:
         self.clamp_stats()
 
     def detectLoss(self):
-        if self.health <= 0 or self.energy <= 0 or self.happiness <= 0:
+        if self.health <= 0 or self.energy <= 0 or self.happiness <= 0 or seld.cleanliness<= 0:
             return True
         return False

@@ -195,9 +195,9 @@ class VirtualPetGUI:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Virtual Pet Simulator")
-        self.root.geometry("640x520")
+        self.root.geometry("1280x720")
         self.root.configure(bg=BACKGROUND)
-        self.root.resizable(False, False)
+        self.root.resizable(True, True)
 
         self.pet = None
         self.economy = None
@@ -289,7 +289,7 @@ class VirtualPetGUI:
         header.pack(anchor="w", pady=(0, 8))
 
         display_frame = tk.Frame(container, bg=CARD_BG, padx=14, pady=14, highlightbackground=BORDER, highlightthickness=1)
-        display_frame.pack(fill="x")
+        display_frame.pack(fill="both", expand=True)
 
         self.pet_display = tk.Label(
             display_frame,
@@ -302,7 +302,7 @@ class VirtualPetGUI:
             padx=10,
             pady=10
         )
-        self.pet_display.pack(fill="x")
+        self.pet_display.pack(fill="both", expand=True)
 
         self.stats_label = tk.Label(
             display_frame,

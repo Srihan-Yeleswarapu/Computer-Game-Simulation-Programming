@@ -86,14 +86,14 @@ class Pet:
         for _ in range(days):
             # Increment the pet's age by 1 day
             self.age_days += 1
-            # Decrease hunger stat by 5 per day
-            self.hunger -= 5
-            # Decrease happiness stat by 3 per day
-            self.happiness -= 3
-            # Decrease energy stat by 4 per day
-            self.energy -= 4
-            # Decrease cleanliness stat by 3 per day
-            self.cleanliness -= 3
+            # Decrease hunger stat by 2 per day
+            self.hunger -= 2
+            # Decrease happiness stat by 2 per day
+            self.happiness -= 2
+            # Decrease energy stat by 2 per day
+            self.energy -= 2
+            # Decrease cleanliness stat by 2 per day
+            self.cleanliness -= 2
             
             # If hunger or cleanliness gets too low, degrade health
             if self.hunger < 20 or self.cleanliness < 20:

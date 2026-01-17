@@ -2,7 +2,7 @@
 
 # Virtual Pet Simulation
 
-FBLA Introduction to Programming Project
+FBLA Introduction to Programming Project (Coded with Python) 
 
 This project creates a digital pet that users can name, feed, and care for over time. Your pet will respond to how well it is treated, showing emotions, changing appearance or behavior, and developing based on the user’s actions.
 We included a "cost of care" system to teach users about the financial responsibility of pet ownership. We track things like: Food and supply costs, health care,  activity purchases, and in-game currency.

@@ -15,15 +15,15 @@ This program includes:
     • A earning systems
 
 Libraries:
-    json (built-in)
-    random (built-in)
-    collections (built-in)
-    dataclasses (built-in)
-    time (built-in)
-    os (built-in)
-    tkinter (built-in)
-    typing (built-in)
-    enum (built-in)
+    • json (built-in)
+    • random (built-in)
+    • collections (built-in)
+    • dataclasses (built-in)
+    • time (built-in)
+    • os (built-in)
+    • tkinter (built-in)
+    • typing (built-in)
+    • enum (built-in)
 
 Attributions:
-    Art created by generative AI
+    • Art created by generative AI

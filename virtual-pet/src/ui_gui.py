@@ -620,8 +620,10 @@ class VirtualPetGUI:
             "bd": 0
         }
 
-        tk.Button(control_row, text="Buy", command=self.buy_stock, **action_style).grid(row=1, column=2, padx=4, sticky="ew")
-        tk.Button(control_row, text="Sell", command=self.sell_stock, **action_style).grid(row=1, column=3, padx=4, sticky="ew")
+        buy_btn = tk.Button(control_row, text="Buy", command=self.buy_stock, **action_style)
+        buy_btn.grid(row=1, column=2, padx=4, sticky="ew")
+        sell_btn = tk.Button(control_row, text="Sell", command=self.sell_stock, **action_style)
+        sell_btn.grid(row=1, column=3, padx=4, sticky="ew")
         control_row.columnconfigure(0, weight=1)
         control_row.columnconfigure(1, weight=1)
 
@@ -646,6 +648,17 @@ class VirtualPetGUI:
 
         self.market_message = tk.Label(market_card, text="", font=("Consolas", 10), fg=TEXT_SECONDARY, bg=CARD_BG, justify="left", anchor="w")
         self.market_message.pack(fill="x", pady=(8, 0))
+
+        Tooltip(self.balance_label, "Your available cash for pet care and investing.")
+        Tooltip(self.portfolio_label, "Estimated value of all shares you own.")
+        Tooltip(self.profit_label, "Total profit or loss from all trades.")
+        Tooltip(self.market_prices_label, "Current prices for each stock symbol.")
+        Tooltip(symbol_menu, "Choose which stock symbol to trade.")
+        Tooltip(self.shares_entry, "Enter how many shares to buy or sell.")
+        Tooltip(buy_btn, "Buy shares using your balance.")
+        Tooltip(sell_btn, "Sell shares to add to your balance.")
+        Tooltip(self.holdings_text, "Your current positions and profit/loss per symbol.")
+        Tooltip(self.market_message, "Status messages for your trades and market updates.")
 
     def build_chart_tab(self):
         container = tk.Frame(self.chart_tab, bg=BACKGROUND, padx=16, pady=16)

@@ -1,5 +1,9 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
+import audioop
+import os
+import tempfile
+import wave
 from pet import Pet, petStats
 from economy import Economy
 from stock_market import StockMarket
@@ -277,10 +281,13 @@ class VirtualPetGUI:
         self.root.geometry("1280x720")
         self.root.configure(bg=BACKGROUND)
         self.root.resizable(True, True)
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
         self.pet = None
         self.economy = None
         self._stat_tooltip = None
+        self._music_temp_path = None
+        self._music_started = False
 
         self.create_start_screen()
         self.root.mainloop()
@@ -354,6 +361,7 @@ class VirtualPetGUI:
 
         self.create_game_screen()
         self.root.after(150, self.show_instructions_popup)
+        self.start_music()
 
     def create_game_screen(self):
         self.clear()
@@ -373,6 +381,92 @@ class VirtualPetGUI:
 
         self.update_ui()
         self.update_economy_ui()
+
+    def start_music(self):
+        if self._music_started:
+            return
+        try:
+            import winsound
+        except ImportError:
+            return
+
+        music_path = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "assets", "musicfx-dj-1768763823614.wav")
+        )
+        if not os.path.exists(music_path):
+            return
+
+        faded_path = self.create_faded_wav(music_path, fade_seconds=6, volume_scale=0.5)
+        if not faded_path:
+            return
+        self._music_temp_path = faded_path
+        self._music_started = True
+        winsound.PlaySound(self._music_temp_path, winsound.SND_FILENAME | winsound.SND_ASYNC | winsound.SND_LOOP)
+
+    def stop_music(self):
+        try:
+            import winsound
+            winsound.PlaySound(None, winsound.SND_PURGE)
+        except ImportError:
+            pass
+        if self._music_temp_path and os.path.exists(self._music_temp_path):
+            try:
+                os.remove(self._music_temp_path)
+            except OSError:
+                pass
+        self._music_temp_path = None
+        self._music_started = False
+
+    def create_faded_wav(self, input_path: str, fade_seconds: int = 3, volume_scale: float = 1.0):
+        try:
+            with wave.open(input_path, "rb") as wf:
+                params = wf.getparams()
+                frames = wf.readframes(wf.getnframes())
+        except (wave.Error, FileNotFoundError):
+            return None
+
+        frame_bytes = params.sampwidth * params.nchannels
+        if frame_bytes <= 0:
+            return None
+
+        total_frames = params.nframes
+        fade_frames = int(params.framerate * fade_seconds)
+        fade_frames = min(fade_frames, max(0, total_frames // 2))
+        if fade_frames <= 0:
+            return input_path
+
+        data = bytearray(frames)
+        volume_scale = max(0.0, min(volume_scale, 1.0))
+
+        for i in range(fade_frames):
+            scale = (i / fade_frames) * volume_scale
+            start = i * frame_bytes
+            end = start + frame_bytes
+            data[start:end] = audioop.mul(data[start:end], params.sampwidth, scale)
+
+        for i in range(fade_frames):
+            scale = ((fade_frames - i) / fade_frames) * volume_scale
+            start = (total_frames - fade_frames + i) * frame_bytes
+            end = start + frame_bytes
+            data[start:end] = audioop.mul(data[start:end], params.sampwidth, scale)
+
+        if volume_scale < 1.0:
+            mid_start = fade_frames * frame_bytes
+            mid_end = (total_frames - fade_frames) * frame_bytes
+            if mid_end > mid_start:
+                data[mid_start:mid_end] = audioop.mul(
+                    data[mid_start:mid_end], params.sampwidth, volume_scale
+                )
+
+        try:
+            temp_fd, temp_path = tempfile.mkstemp(suffix=".wav")
+            os.close(temp_fd)
+            with wave.open(temp_path, "wb") as wf:
+                wf.setparams(params)
+                wf.writeframes(bytes(data))
+            return temp_path
+        except OSError:
+            return None
 
     def show_instructions_popup(self):
         popup = tk.Toplevel(self.root)
@@ -894,8 +988,13 @@ class VirtualPetGUI:
             return False
         reason = getattr(self.pet, "last_death_reason", "") or "Your pet's wellbeing dropped too low."
         messagebox.showinfo("Game Over", f"{self.pet.name} has died.\n{reason}")
+        self.stop_music()
         self.root.destroy()
         return True
+
+    def on_close(self):
+        self.stop_music()
+        self.root.destroy()
 
 
 if __name__ == "__main__":

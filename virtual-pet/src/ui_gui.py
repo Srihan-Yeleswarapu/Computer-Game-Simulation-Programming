@@ -279,6 +279,7 @@ class VirtualPetGUI:
         self.stock_market = StockMarket(self.economy)
 
         self.create_game_screen()
+        self.root.after(150, self.show_instructions_popup)
 
     def create_game_screen(self):
         self.clear()
@@ -298,6 +299,114 @@ class VirtualPetGUI:
 
         self.update_ui()
         self.update_economy_ui()
+
+    def show_instructions_popup(self):
+        popup = tk.Toplevel(self.root)
+        popup.title("How to Play")
+        popup.configure(bg=BACKGROUND)
+        popup.resizable(False, False)
+        popup.transient(self.root)
+        popup.grab_set()
+
+        popup_width = 760
+        popup_height = 520
+        x = self.root.winfo_rootx() + (self.root.winfo_width() // 2) - (popup_width // 2)
+        y = self.root.winfo_rooty() + (self.root.winfo_height() // 2) - (popup_height // 2)
+        popup.geometry(f"{popup_width}x{popup_height}+{x}+{y}")
+
+        header = tk.Frame(popup, bg=BACKGROUND, pady=10)
+        header.pack(fill="x")
+        tk.Label(
+            header,
+            text="Welcome to Virtual Pet Studio",
+            font=("Consolas", 18, "bold"),
+            fg=TEXT_PRIMARY,
+            bg=BACKGROUND
+        ).pack()
+        tk.Label(
+            header,
+            text="Keep your pet happy, healthy, and well-funded.",
+            font=("Consolas", 11),
+            fg=TEXT_SECONDARY,
+            bg=BACKGROUND
+        ).pack()
+
+        card = tk.Frame(popup, bg=CARD_BG, padx=20, pady=16, highlightbackground=BORDER, highlightthickness=1)
+        card.pack(fill="both", expand=True, padx=16, pady=10)
+
+        left = tk.Frame(card, bg=CARD_BG)
+        left.pack(side="left", fill="both", expand=True, padx=(0, 12))
+        right = tk.Frame(card, bg=CARD_BG)
+        right.pack(side="right", fill="both", expand=True, padx=(12, 0))
+
+        tk.Label(left, text="Care Loop", font=("Consolas", 13, "bold"), fg=ACCENT, bg=CARD_BG).pack(anchor="w")
+        tk.Label(
+            left,
+            text=(
+                "- Feed boosts hunger\n"
+                "- Play raises happiness\n"
+                "- Sleep restores energy\n"
+                "- Bathe improves cleanliness\n"
+                "- Advance Day progresses time\n"
+            ),
+            font=("Consolas", 11),
+            fg=TEXT_PRIMARY,
+            bg=CARD_BG,
+            justify="left"
+        ).pack(anchor="w", pady=(6, 12))
+
+        tk.Label(left, text="Your Goal", font=("Consolas", 13, "bold"), fg=ACCENT, bg=CARD_BG).pack(anchor="w")
+        tk.Label(
+            left,
+            text=(
+                "Keep all stats healthy.\n"
+                "If any stat hits zero,\n"
+                "the game ends."
+            ),
+            font=("Consolas", 11),
+            fg=TEXT_PRIMARY,
+            bg=CARD_BG,
+            justify="left"
+        ).pack(anchor="w", pady=(6, 0))
+
+        tk.Label(right, text="Economy & Stocks", font=("Consolas", 13, "bold"), fg="#60a5fa", bg=CARD_BG).pack(anchor="w")
+        tk.Label(
+            right,
+            text=(
+                "- Balance funds your actions\n"
+                "- Buy shares to grow wealth\n"
+                "- Sell to lock in profits\n"
+                "- Charts show market history"
+            ),
+            font=("Consolas", 11),
+            fg=TEXT_PRIMARY,
+            bg=CARD_BG,
+            justify="left"
+        ).pack(anchor="w", pady=(6, 12))
+
+        tip_frame = tk.Frame(popup, bg=INPUT_BG, padx=14, pady=10, highlightbackground=BORDER, highlightthickness=1)
+        tip_frame.pack(fill="x", padx=16, pady=(0, 12))
+        tk.Label(
+            tip_frame,
+            text="Pro Tip: Advance Day to move the market and refresh your pet's needs.",
+            font=("Consolas", 10, "bold"),
+            fg=TEXT_PRIMARY,
+            bg=INPUT_BG
+        ).pack(anchor="w")
+
+        tk.Button(
+            popup,
+            text="Start Caring",
+            command=popup.destroy,
+            bg=ACCENT,
+            fg=BACKGROUND,
+            activebackground=ACCENT_DARK,
+            activeforeground=BACKGROUND,
+            font=("Consolas", 12, "bold"),
+            relief="flat",
+            padx=16,
+            pady=6
+        ).pack(pady=(0, 12))
 
     def build_care_tab(self):
         container = tk.Frame(self.care_tab, bg=BACKGROUND, padx=10, pady=10)

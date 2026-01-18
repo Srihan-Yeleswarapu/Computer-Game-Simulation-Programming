@@ -197,6 +197,79 @@ def format_bar(label: str, value: int, max_value: int, width: int = 18) -> str:
     return f"{label:<12} [{bar}] {value:>3}/{max_value}"
 
 
+class Tooltip:
+    def __init__(self, widget: tk.Widget, text: str, delay_ms: int = 400):
+        self.widget = widget
+        self.text = text
+        self.delay_ms = delay_ms
+        self._after_id = None
+        self._tip = None
+        widget.bind("<Enter>", self._schedule)
+        widget.bind("<Leave>", self._hide)
+        widget.bind("<ButtonPress>", self._hide)
+
+    def _schedule(self, _event=None):
+        self._after_id = self.widget.after(self.delay_ms, self._show)
+
+    def _show(self):
+        if self._tip:
+            return
+        x = self.widget.winfo_rootx() + 12
+        y = self.widget.winfo_rooty() + self.widget.winfo_height() + 8
+        self._tip = tk.Toplevel(self.widget)
+        self._tip.wm_overrideredirect(True)
+        self._tip.wm_geometry(f"+{x}+{y}")
+        label = tk.Label(
+            self._tip,
+            text=self.text,
+            bg=INPUT_BG,
+            fg=TEXT_PRIMARY,
+            font=("Consolas", 10),
+            relief="solid",
+            bd=1,
+            padx=8,
+            pady=4
+        )
+        label.pack()
+
+    def _hide(self, _event=None):
+        if self._after_id:
+            self.widget.after_cancel(self._after_id)
+            self._after_id = None
+        if self._tip:
+            self._tip.destroy()
+            self._tip = None
+
+
+class TextTooltip:
+    def __init__(self, widget: tk.Text):
+        self.widget = widget
+        self._tip = None
+
+    def show_at(self, text: str, x_root: int, y_root: int):
+        self.hide()
+        self._tip = tk.Toplevel(self.widget)
+        self._tip.wm_overrideredirect(True)
+        self._tip.wm_geometry(f"+{x_root}+{y_root}")
+        label = tk.Label(
+            self._tip,
+            text=text,
+            bg=INPUT_BG,
+            fg=TEXT_PRIMARY,
+            font=("Consolas", 10),
+            relief="solid",
+            bd=1,
+            padx=8,
+            pady=4
+        )
+        label.pack()
+
+    def hide(self):
+        if self._tip:
+            self._tip.destroy()
+            self._tip = None
+
+
 class VirtualPetGUI:
     def __init__(self):
         self.root = tk.Tk()
@@ -207,6 +280,7 @@ class VirtualPetGUI:
 
         self.pet = None
         self.economy = None
+        self._stat_tooltip = None
 
         self.create_start_screen()
         self.root.mainloop()
@@ -437,16 +511,23 @@ class VirtualPetGUI:
         )
         self.pet_display.pack(fill="both", expand=True)
 
-        self.stats_label = tk.Label(
+        self.stats_label = tk.Text(
             display_frame,
             font=("Consolas", 11),
             fg=TEXT_PRIMARY,
             bg=CARD_BG,
-            justify="left",
-            anchor="w",
+            relief="flat",
+            height=7,
+            wrap="none",
+            padx=6,
             pady=8
         )
         self.stats_label.pack(fill="x", pady=(8, 0))
+        self.stats_label.config(state="disabled")
+        self.stats_label.tag_configure("low", foreground="#f87171")
+        self.stats_label.tag_configure("normal", foreground=TEXT_PRIMARY)
+        self._stat_tooltip = TextTooltip(self.stats_label)
+        self.bind_stat_tooltips()
 
         btn_frame = tk.Frame(container, bg=BACKGROUND)
         btn_frame.pack(pady=12)
@@ -463,11 +544,22 @@ class VirtualPetGUI:
             "bd": 0
         }
 
-        tk.Button(btn_frame, text="Feed", command=self.feed, **btn_style).grid(row=0, column=0, padx=6, pady=6)
-        tk.Button(btn_frame, text="Play", command=self.play, **btn_style).grid(row=0, column=1, padx=6, pady=6)
-        tk.Button(btn_frame, text="Sleep", command=self.sleep, **btn_style).grid(row=0, column=2, padx=6, pady=6)
-        tk.Button(btn_frame, text="Advance Day", command=self.advance, **btn_style).grid(row=0, column=3, padx=6, pady=6)
-        tk.Button(btn_frame, text="Bathe/Shower", command=self.shower, **btn_style).grid(row=0, column=4, padx=6, pady=6)
+        feed_btn = tk.Button(btn_frame, text="Feed", command=self.feed, **btn_style)
+        feed_btn.grid(row=0, column=0, padx=6, pady=6)
+        play_btn = tk.Button(btn_frame, text="Play", command=self.play, **btn_style)
+        play_btn.grid(row=0, column=1, padx=6, pady=6)
+        sleep_btn = tk.Button(btn_frame, text="Sleep", command=self.sleep, **btn_style)
+        sleep_btn.grid(row=0, column=2, padx=6, pady=6)
+        advance_btn = tk.Button(btn_frame, text="Advance Day", command=self.advance, **btn_style)
+        advance_btn.grid(row=0, column=3, padx=6, pady=6)
+        shower_btn = tk.Button(btn_frame, text="Bathe/Shower", command=self.shower, **btn_style)
+        shower_btn.grid(row=0, column=4, padx=6, pady=6)
+
+        Tooltip(feed_btn, "Spend $10 to reduce hunger.")
+        Tooltip(play_btn, "Spend $5 to raise happiness.")
+        Tooltip(sleep_btn, "Restore energy without spending money.")
+        Tooltip(advance_btn, "Advance time; market prices update.")
+        Tooltip(shower_btn, "Spend $8 to improve cleanliness.")
 
     def build_economy_tab(self):
         container = tk.Frame(self.economy_tab, bg=BACKGROUND, padx=16, pady=16)
@@ -581,18 +673,54 @@ class VirtualPetGUI:
         self.pet_display.config(text=skin)
 
         stats = self.pet.pet_type
-        self.stats_label.config(
-            text=(
-                f"{self.pet.name} - {species.title()}\n"
-                f"{format_bar('Hunger', self.pet.hunger, stats.hunger)}\n"
-                f"{format_bar('Happiness', self.pet.happiness, stats.happiness)}\n"
-                f"{format_bar('Health', self.pet.health, stats.health)}\n"
-                f"{format_bar('Energy', self.pet.energy, stats.energy)}\n"
-                f"{format_bar('Cleanliness', self.pet.cleanliness, stats.cleanliness)}\n"
-                f"Balance:      ${self.economy.balance}"
-            )
-        )
+        lines = [
+            (f"{self.pet.name} - {species.title()}\n", ["normal"]),
+            self.format_bar_line("Hunger", self.pet.hunger, stats.hunger),
+            self.format_bar_line("Happiness", self.pet.happiness, stats.happiness),
+            self.format_bar_line("Health", self.pet.health, stats.health),
+            self.format_bar_line("Energy", self.pet.energy, stats.energy),
+            self.format_bar_line("Cleanliness", self.pet.cleanliness, stats.cleanliness),
+            (f"Balance:      ${self.economy.balance}\n", ["normal"]),
+        ]
+        self.stats_label.config(state="normal")
+        self.stats_label.delete("1.0", "end")
+        for text, tags in lines:
+            self.stats_label.insert("end", text, tuple(tags))
+        self.stats_label.config(state="disabled")
         self.update_economy_ui()
+
+    def format_bar_line(self, label: str, value: int, max_value: int):
+        line = format_bar(label, value, max_value) + "\n"
+        max_value = max_value or 1
+        ratio = max(0, min(value, max_value)) / max_value
+        color_tag = "low" if ratio <= 0.25 else "normal"
+        stat_tag = f"stat_{label.lower()}"
+        return line, [stat_tag, color_tag]
+
+    def bind_stat_tooltips(self):
+        tooltips = {
+            "stat_hunger": "Increases: Feed.  Decreases: Time passing, Play.",
+            "stat_happiness": "Increases: Play.  Decreases: Time passing, Bathe.",
+            "stat_health": "Increases: Overall good care, feed.  Decreases: Neglect of other stats.",
+            "stat_energy": "Increases: Sleep.  Decreases: Play, time passing.",
+            "stat_cleanliness": "Increases: Bathe/Shower.  Decreases: Time passing.",
+        }
+
+        for tag, text in tooltips.items():
+            self.stats_label.tag_bind(tag, "<Enter>", lambda e, t=text: self._show_stat_tip(e, t))
+            self.stats_label.tag_bind(tag, "<Motion>", lambda e, t=text: self._show_stat_tip(e, t))
+            self.stats_label.tag_bind(tag, "<Leave>", lambda e: self._hide_stat_tip())
+
+    def _show_stat_tip(self, event, text: str):
+        if not self._stat_tooltip:
+            return
+        x = event.x_root + 12
+        y = event.y_root + 12
+        self._stat_tooltip.show_at(text, x, y)
+
+    def _hide_stat_tip(self):
+        if self._stat_tooltip:
+            self._stat_tooltip.hide()
 
     def update_economy_ui(self):
         if not hasattr(self, "stock_market"):

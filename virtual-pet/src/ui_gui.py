@@ -153,6 +153,10 @@ class VirtualPetGUI:
         # Cache scaled PhotoImage objects to avoid repeated disk loads.
         self._pet_image_cache = {}
         self._current_pet_image = None
+        # Real-time tick configuration.
+        self._tick_ms = 5000
+        self._tick_after_id = None
+        self._running = True
 
         # Build the initial screen and start the loop.
         self.create_start_screen()
@@ -233,6 +237,7 @@ class VirtualPetGUI:
         self.create_game_screen()
         self.root.after(150, self.show_instructions_popup)
         self.start_music()
+        self.start_real_time_loop()
 
     def create_game_screen(self):
         # Build notebook tabs for care, economy, and charts.
@@ -398,7 +403,7 @@ class VirtualPetGUI:
                 "- Play raises happiness\n"
                 "- Sleep restores energy\n"
                 "- Bathe improves cleanliness\n"
-                "- Advance Day progresses time\n"
+                "- Time passes automatically\n"
             ),
             font=("Consolas", 11),
             fg=TEXT_PRIMARY,
@@ -427,7 +432,8 @@ class VirtualPetGUI:
                 "- Balance funds your actions\n"
                 "- Buy shares to grow wealth\n"
                 "- Sell to lock in profits\n"
-                "- Charts show market history"
+                "- Charts show market history\n"
+                "- Market moves automatically"
             ),
             font=("Consolas", 11),
             fg=TEXT_PRIMARY,
@@ -439,7 +445,7 @@ class VirtualPetGUI:
         tip_frame.pack(fill="x", padx=16, pady=(0, 12))
         tk.Label(
             tip_frame,
-            text="Pro Tip: Advance Day to move the market and refresh your pet's needs.",
+            text="Pro Tip: Watch the timer and keep stats above zero.",
             font=("Consolas", 10, "bold"),
             fg=TEXT_PRIMARY,
             bg=INPUT_BG
@@ -530,15 +536,12 @@ class VirtualPetGUI:
         play_btn.grid(row=0, column=1, padx=6, pady=6)
         sleep_btn = tk.Button(btn_frame, text="Sleep", command=self.sleep, **btn_style)
         sleep_btn.grid(row=0, column=2, padx=6, pady=6)
-        advance_btn = tk.Button(btn_frame, text="Advance Day", command=self.advance, **btn_style)
-        advance_btn.grid(row=0, column=3, padx=6, pady=6)
         shower_btn = tk.Button(btn_frame, text="Bathe/Shower", command=self.shower, **btn_style)
-        shower_btn.grid(row=0, column=4, padx=6, pady=6)
+        shower_btn.grid(row=0, column=3, padx=6, pady=6)
 
         Tooltip(feed_btn, "Spend $10 to reduce hunger.")
         Tooltip(play_btn, "Spend $5 to raise happiness.")
         Tooltip(sleep_btn, "Restore energy without spending money.")
-        Tooltip(advance_btn, "Advance time; market prices update.")
         Tooltip(shower_btn, "Spend $8 to improve cleanliness.")
 
     def build_economy_tab(self):
@@ -806,13 +809,27 @@ class VirtualPetGUI:
         self.update_ui()
         self.check_game_over()
 
-    def advance(self):
-        # Market advances with time to prevent spamming ticks
+    def start_real_time_loop(self):
+        # Begin recurring ticks that advance time and market.
+        if self._tick_after_id:
+            self.root.after_cancel(self._tick_after_id)
+        self._running = True
+        self._schedule_tick()
+
+    def _schedule_tick(self):
+        if not self._running:
+            return
+        self._tick_after_id = self.root.after(self._tick_ms, self._tick)
+
+    def _tick(self):
+        if not self._running:
+            return
         self.stock_market.tick()
-        self.market_message.config(text="Day advanced. Market moved.", fg=TEXT_SECONDARY)
+        self.market_message.config(text="Market updated automatically.", fg=TEXT_SECONDARY)
         self.pet.pass_time(1)
         self.update_ui()
-        self.check_game_over()
+        if not self.check_game_over():
+            self._schedule_tick()
 
     def shower(self):
         # Bath action: spend money and improve cleanliness.
@@ -925,12 +942,20 @@ class VirtualPetGUI:
             return False
         reason = getattr(self.pet, "last_death_reason", "") or "Your pet's wellbeing dropped too low."
         messagebox.showinfo("Game Over", f"{self.pet.name} has died.\n{reason}")
+        self._running = False
+        if self._tick_after_id:
+            self.root.after_cancel(self._tick_after_id)
+            self._tick_after_id = None
         self.stop_music()
         self.root.destroy()
         return True
 
     def on_close(self):
         # Handle window close events.
+        self._running = False
+        if self._tick_after_id:
+            self.root.after_cancel(self._tick_after_id)
+            self._tick_after_id = None
         self.stop_music()
         self.root.destroy()
 

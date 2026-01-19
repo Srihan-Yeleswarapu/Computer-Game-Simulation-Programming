@@ -156,9 +156,16 @@ def main():
         # Displays the main menu options to the user
         ui.show_menu()
 
-        # ...existing code... (commented-out menu display code)
+        # print("\nActions:")
+        # print("1. Feed pet ($10 per feed)")
+        # print("2. Play with pet ($5 per play)")
+        # print("3. Sleep")
+        # print("4. Advance time")
+        # print("5. Show expenses report")
+        # print("6. Save game")
+        # print("7. Load game")
+        # print("8. Quit")
 
-        # Prompts the user to select an action from the menu
         choice = input("Choose an action: ")
 
         # Checks if the user chose to feed the pet (option 1)
@@ -274,7 +281,10 @@ def main():
             print("Invalid choice. Try again.")
 
             
-# ...existing code... (commented-out __str__ method)
+#def __str__(self):
+#    return (f"{self.name} ({self.pet_type}) - Age: {self.age_days} days\n"
+#            f"Hunger: {self.hunger}, Happiness: {self.happiness}, Health: {self.health}\n"
+#            f"Energy: {self.energy}, Cleanliness: {self.cleanliness}, State: {self.get_emotional_state()}")
     
 # Helper function to safely get integer input from the user with validation
 def get_int_input(prompt, min_val=None, max_val=None):

@@ -752,7 +752,7 @@ class VirtualPetGUI:
             "money": "You start with a balance and spend it on care or stocks. Earnings come from selling shares.",
             "game over": "If any stat hits zero (or sadness persists), the game ends.",
             "skins": "Pet images are loaded from assets using the pattern <state>-<species>.png.",
-            "time": "Time advances automatically every few seconds, reducing stats and moving the market.",
+            "time": "Time advances automatically every few seconds, reducing stats and moving the market."
         }
 
     def add_qa_message(self, speaker: str, message: str):

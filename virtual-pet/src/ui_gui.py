@@ -69,7 +69,7 @@ class Tooltip:
         self._after_id = self.widget.after(self.delay_ms, self._show)
 
     def _show(self):
-        # Create a small top-level tooltip window.
+        # Create a small top-level tooltip window. mn
         if self._tip:
             return
         x = self.widget.winfo_rootx() + 12

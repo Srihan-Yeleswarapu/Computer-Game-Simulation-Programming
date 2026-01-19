@@ -157,6 +157,8 @@ class VirtualPetGUI:
         self._tick_ms = 5000
         self._tick_after_id = None
         self._running = True
+        # Simple Q&A knowledge base for in-game help.
+        self._qa_knowledge = self.build_qa_knowledge()
 
         # Build the initial screen and start the loop.
         self.create_start_screen()
@@ -247,14 +249,17 @@ class VirtualPetGUI:
         self.care_tab = tk.Frame(self.notebook, bg=BACKGROUND)
         self.economy_tab = tk.Frame(self.notebook, bg=BACKGROUND)
         self.chart_tab = tk.Frame(self.notebook, bg=BACKGROUND)
+        self.help_tab = tk.Frame(self.notebook, bg=BACKGROUND)
         self.notebook.add(self.care_tab, text="Care")
         self.notebook.add(self.economy_tab, text="Economy")
         self.notebook.add(self.chart_tab, text="Charts")
+        self.notebook.add(self.help_tab, text="Help")
         self.notebook.pack(fill="both", expand=True)
 
         self.build_care_tab()
         self.build_economy_tab()
         self.build_chart_tab()
+        self.build_help_tab()
 
         self.update_ui()
         self.update_economy_ui()
@@ -663,6 +668,117 @@ class VirtualPetGUI:
         self.chart_canvas = tk.Canvas(container, bg="#0b1220", highlightthickness=1, highlightbackground=BORDER)
         self.chart_canvas.pack(fill="both", expand=True)
         self.chart_canvas.bind("<Configure>", lambda e: self.draw_chart())
+
+    def build_help_tab(self):
+        # Assemble the Q&A help tab.
+        container = tk.Frame(self.help_tab, bg=BACKGROUND, padx=16, pady=16)
+        container.pack(fill="both", expand=True)
+
+        header = tk.Label(
+            container,
+            text="Game Q&A",
+            font=("Consolas", 18, "bold"),
+            fg=TEXT_PRIMARY,
+            bg=BACKGROUND
+        )
+        header.pack(anchor="w", pady=(0, 8))
+
+        prompt = tk.Label(
+            container,
+            text="Ask about how the game works, controls, or pet care tips.",
+            font=("Consolas", 11),
+            fg=TEXT_SECONDARY,
+            bg=BACKGROUND
+        )
+        prompt.pack(anchor="w", pady=(0, 12))
+
+        chat_card = tk.Frame(container, bg=CARD_BG, padx=12, pady=12, highlightbackground=BORDER, highlightthickness=1)
+        chat_card.pack(fill="both", expand=True)
+
+        self.qa_log = tk.Text(
+            chat_card,
+            font=("Consolas", 11),
+            fg=TEXT_PRIMARY,
+            bg=INPUT_BG,
+            relief="flat",
+            wrap="word",
+            height=14
+        )
+        self.qa_log.pack(fill="both", expand=True)
+        self.qa_log.config(state="disabled")
+
+        input_row = tk.Frame(container, bg=BACKGROUND)
+        input_row.pack(fill="x", pady=(10, 0))
+
+        self.qa_entry = tk.Entry(
+            input_row,
+            font=("Consolas", 11),
+            bg=INPUT_BG,
+            fg=TEXT_PRIMARY,
+            insertbackground=TEXT_PRIMARY,
+            relief="flat"
+        )
+        self.qa_entry.pack(side="left", fill="x", expand=True, padx=(0, 8))
+        self.qa_entry.bind("<Return>", lambda _e: self.handle_question())
+
+        ask_btn = tk.Button(
+            input_row,
+            text="Ask",
+            command=self.handle_question,
+            bg=BUTTON_BG,
+            fg=TEXT_PRIMARY,
+            activebackground=BUTTON_BG_ACTIVE,
+            activeforeground=TEXT_PRIMARY,
+            font=("Consolas", 11, "bold"),
+            relief="flat",
+            padx=14,
+            pady=6
+        )
+        ask_btn.pack(side="right")
+
+        self.add_qa_message("Agent", "Ask me anything about pet care, the economy, or controls.")
+
+    def build_qa_knowledge(self):
+        # Keyword-driven answers for common questions.
+        return {
+            "how to play": "Name your pet, then keep hunger, happiness, health, energy, and cleanliness above zero. Time moves automatically.",
+            "controls": "Use the Care tab buttons: Feed, Play, Sleep, Bathe/Shower. The Economy tab lets you buy and sell shares.",
+            "feed": "Feeding costs $10 and raises hunger. It also slightly boosts health.",
+            "play": "Playing costs $5 and boosts happiness, but uses energy and hunger.",
+            "sleep": "Sleep restores energy without spending money.",
+            "bathe": "Bathing costs $8 and improves cleanliness, but can reduce happiness a bit.",
+            "market": "The market updates automatically over time. Buy shares in the Economy tab and sell to lock profits.",
+            "stocks": "Pick a symbol, enter shares, then Buy or Sell. Your balance and holdings update immediately.",
+            "money": "You start with a balance and spend it on care or stocks. Earnings come from selling shares.",
+            "game over": "If any stat hits zero (or sadness persists), the game ends.",
+            "skins": "Pet images are loaded from assets using the pattern <state>-<species>.png.",
+            "time": "Time advances automatically every few seconds, reducing stats and moving the market.",
+        }
+
+    def add_qa_message(self, speaker: str, message: str):
+        # Append a formatted line to the Q&A log.
+        self.qa_log.config(state="normal")
+        self.qa_log.insert("end", f"{speaker}: {message}\n")
+        self.qa_log.see("end")
+        self.qa_log.config(state="disabled")
+
+    def handle_question(self):
+        # Handle user question and respond with the agent answer.
+        question = self.qa_entry.get().strip()
+        if not question:
+            return
+        self.add_qa_message("You", question)
+        self.qa_entry.delete(0, "end")
+        answer = self.answer_question(question)
+        self.add_qa_message("Agent", answer)
+
+    def answer_question(self, question: str) -> str:
+        # Match question text to the best known response.
+        q = question.lower()
+        for key, response in self._qa_knowledge.items():
+            if key in q:
+                return response
+        return "I can help with pet care, controls, stats, or the economy. Try asking about feeding, playing, or the market."
 
     def load_pet_image(self, species: str, state: str):
         # Load and scale a pet image for the given species/state.

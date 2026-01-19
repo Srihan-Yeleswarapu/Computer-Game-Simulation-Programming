@@ -187,55 +187,6 @@ class StockMarket:
         # Return the history dictionary mapping symbols to lists of (day, price) tuples
         return self.history
 
-    # Method to calculate a moving average for a symbol over a specified window
-    def moving_average(self, symbol: str, window: int = 3):
-        # Get the list of price history points for this symbol
-        points = self.history.get(symbol, [])
-        # Initialize a list to store moving average values
-        averages = []
-        # Loop through each point in the history
-        for i in range(len(points)):
-            # Skip until we have enough points for the window
-            if i + 1 < window:
-                continue
-            # Get the window of points from (i + 1 - window) to (i + 1)
-            window_points = points[i + 1 - window : i + 1]
-            # Calculate the average price for this window
-            avg = sum(p for _, p in window_points) / window
-            # Append the day and rounded average to the results
-            averages.append((points[i][0], round(avg, 2)))
-        # Return the list of moving averages
-        return averages
-
-    # Method to project future price movements based on momentum and slope
-    def predict(self, symbol: str, days_ahead: int = 5):
-        """Simple momentum-based projection; not guaranteed."""
-        # Get the list of price history points for this symbol
-        points = self.history.get(symbol, [])
-        # If not enough history, return empty list
-        if len(points) < 2:
-            return []
-            # Get the most recent day and price
-        last_day, last_price = points[-1]
-        # Get the previous day and price
-        prev_day, prev_price = points[-2]
-        # Calculate the slope (price change per day)
-        slope = (last_price - prev_price) / max(1, (last_day - prev_day))
-        # Get the symbol's momentum factor
-        momentum = self.momentum.get(symbol, 0.0)
-        # Initialize an empty projection list
-        proj = []
-        # Start with the current price
-        price = last_price
-        # Loop for the requested number of days ahead
-        for i in range(1, days_ahead + 1):
-            # Apply momentum and slope with damping to avoid unrealistic projections
-            price = max(0.5, price * (1 + momentum * 0.5) + slope * 0.5)
-            # Append the projected day and rounded price
-            proj.append((last_day + i, round(price, 2)))
-        # Return the projection list
-        return proj
-
     # Method to format current holdings as text lines with profit/loss information
     def holdings_lines(self):
         # Initialize an empty list to store formatted holding lines

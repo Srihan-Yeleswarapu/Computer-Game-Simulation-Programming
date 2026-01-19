@@ -1,9 +1,6 @@
 # Economy.py
 # Import the defaultdict class from collections module to create a dictionary with default integer values
 from collections import defaultdict
-# Import the ui module for terminal-based user interface functions
-import uiTermVer as ui
-
 # Define the Economy class to manage money and spending in the virtual pet game
 class Economy:
     # Constructor that initializes the Economy with an optional starting balance (default 1000)

@@ -1,12 +1,8 @@
 # Pet.py
-# Import the ui module for terminal-based user interface functions
-import uiTermVer as ui
 # Import dataclass decorator to create lightweight data container classes
 from dataclasses import dataclass
-# Import Enum for creating enumeration types
-from enum import Enum
 # Import type hints for optional and union types
-from typing import Optional, Union
+from typing import Union
 
 # Define a dataclass that holds the base stats for a pet species
 @dataclass
@@ -27,7 +23,7 @@ class petStats:
 # Define the Pet class to represent an individual virtual pet instance
 class Pet:
     # Constructor that initializes a pet with name, type, age, and optional UI flag
-    def __init__(self, name: str, pet_type: Union[petStats, str], age_days: int = 0, use_terminal_ui: bool = True):
+    def __init__(self, name: str, pet_type: Union[petStats, str], age_days: int = 0):
         # Store the pet's name
         self.name = name
 
@@ -60,8 +56,6 @@ class Pet:
         self.sad_streak = 0
         # Store the reason for the pet's death/loss condition
         self.last_death_reason = ""
-        # Store whether to use terminal UI for game over screen
-        self.use_terminal_ui = use_terminal_ui
         
     # Method to ensure all stats stay within valid bounds (0 to max)
     def clamp_stats(self):
@@ -104,7 +98,7 @@ class Pet:
             # Update the sad streak counter based on current emotional state
             self._update_sad_streak()
             # Check if the pet has reached a loss condition; break if true
-            if self.detectLoss(trigger_ui=self.use_terminal_ui):
+            if self.detectLoss():
                 break
                 
     # Method to determine the pet's current emotional state based on stats
@@ -192,14 +186,10 @@ class Pet:
             self.sad_streak = 0
 
     # Method to detect if the pet has reached a loss condition
-    def detectLoss(self, trigger_ui: Optional[bool] = None) -> bool:
+    def detectLoss(self) -> bool:
         """
         Returns True if the pet has reached a loss condition.
-        When trigger_ui is True (used by the terminal UI), it will call the UI game over screen if available.
         """
-        # Use the instance variable if trigger_ui is not explicitly provided
-        if trigger_ui is None:
-            trigger_ui = self.use_terminal_ui
         # Initialize an empty reason string
         reason = ""
         # If health reaches 0 or below, set the loss reason
@@ -228,8 +218,5 @@ class Pet:
         if not reason:
             return False
 
-        # If UI triggering is enabled and the game_over_screen function exists, call it
-        if trigger_ui and hasattr(ui, "game_over_screen"):
-            ui.game_over_screen(self.name)
         # Return True to indicate a loss condition was detected
         return True

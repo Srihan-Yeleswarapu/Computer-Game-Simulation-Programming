@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
 import audioop
+import math
 import os
 import tempfile
 import wave
@@ -25,166 +26,11 @@ STOCK_COLORS = {
     "NUT": "#fbbf24",
 }
 
-# =========================
-# ASCII PET SKINS
-# =========================
-
-PET_SKINS = {
-    "dog": {
-        "happy": r"""
-+--------------+
-| / \__        |
-|(    @\___    |
-|/         O   |
-+--------------+
-""",
-        "neutral": r"""
-+--------------+
-| / \__        |
-|(    @\___    |
-|/         o   |
-+--------------+
-""",
-        "hungry": r"""
-+--------------+
-| / \__        |
-|(    @\___    |
-|/       ( )~  |
-+--------------+
-""",
-        "tired": r"""
-+--------------+
-| / \__        |
-|(   -@\___    |
-|/         z   |
-+--------------+
-""",
-        "dirty": r"""
-+--------------+
-| / \__   . .  |
-|(  x @\___    |
-|/    ~    o   |
-+--------------+
-""",
-        "sick": r"""
-+--------------+
-| / \__  *     |
-|(  u @\___    |
-|/     _   o   |
-+--------------+
-""",
-        "sad": r"""
-+--------------+
-| / \__        |
-|(  T @\___    |
-|/        _    |
-+--------------+
-"""
-    },
-
-    "cat": {
-        "happy": r"""
-+--------------+
-| /\_/\  /\    |
-|( =^.^= ) )   |
-| >  w  <(/    |
-+--------------+
-""",
-        "neutral": r"""
-+--------------+
-| /\_/\  /\    |
-|( =o.o= ) )   |
-| >  -  <(/    |
-+--------------+
-""",
-        "hungry": r"""
-+--------------+
-| /\_/\  /\    |
-|( =o.o= ) )   |
-| >  ~  <(/    |
-+--------------+
-""",
-        "tired": r"""
-+--------------+
-| /\_/\  /\    |
-|( =-.-= ) )   |
-| >  -  <(/    |
-+--------------+
-""",
-        "dirty": r"""
-+--------------+
-| /\_/\  /\ .  |
-|( =x.x= ) )   |
-| >  ~  <(/    |
-+--------------+
-""",
-        "sick": r"""
-+--------------+
-| /\_/\  /\    |
-|( =u.u= ) )   |
-| >  _  <(/    |
-+--------------+
-""",
-        "sad": r"""
-+--------------+
-| /\_/\  /\    |
-|( =T.T= ) )   |
-| >  _  <(/    |
-+--------------+
-"""
-    },
-
-    "guinea pig": {
-        "happy": r"""
-+--------------+
-| (\__//)      |
-|( 'u'  )  o ) |
-| \____/  (_/  |
-+--------------+
-""",
-        "neutral": r"""
-+--------------+
-| (\__//)      |
-|( 'o'  )  o ) |
-| \____/  (_/  |
-+--------------+
-""",
-        "hungry": r"""
-+--------------+
-| (\__//)      |
-|( 'o'  )  o ) |
-| \_~~_/  (_/  |
-+--------------+
-""",
-        "tired": r"""
-+--------------+
-| (\__//)      |
-|( -.-  )  o ) |
-| \____/  (_/  |
-+--------------+
-""",
-        "dirty": r"""
-+--------------+
-| (\__//)  .   |
-|( 'x'  )  o ) |
-| \_~~_/  (_/  |
-+--------------+
-""",
-        "sick": r"""
-+--------------+
-| (\__//)      |
-|( 'u'  )  o ) |
-| \_--_/  (_/  |
-+--------------+
-""",
-        "sad": r"""
-+--------------+
-| (\__//)      |
-|( 'T'  )  o ) |
-| \____/  (_/  |
-+--------------+
-"""
-    }
+ASSETS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "assets"))
+PET_SLUGS = {
+    "dog": "dog",
+    "cat": "cat",
+    "guinea pig": "guinea-pig",
 }
 
 GUI_PET_PROFILES = {
@@ -288,6 +134,8 @@ class VirtualPetGUI:
         self._stat_tooltip = None
         self._music_temp_path = None
         self._music_started = False
+        self._pet_image_cache = {}
+        self._current_pet_image = None
 
         self.create_start_screen()
         self.root.mainloop()
@@ -355,7 +203,7 @@ class VirtualPetGUI:
             return
 
         profile = GUI_PET_PROFILES.get(ptype.lower(), petStats(ptype.lower()))
-        self.pet = Pet(name, profile, use_terminal_ui=False)
+        self.pet = Pet(name, profile)
         self.economy = Economy()
         self.stock_market = StockMarket(self.economy)
 
@@ -771,13 +619,42 @@ class VirtualPetGUI:
         self.chart_canvas.pack(fill="both", expand=True)
         self.chart_canvas.bind("<Configure>", lambda e: self.draw_chart())
 
+    def load_pet_image(self, species: str, state: str):
+        species = species.lower()
+        state = state.lower()
+        slug = PET_SLUGS.get(species, PET_SLUGS["dog"])
+        cache_key = (slug, state)
+        if cache_key in self._pet_image_cache:
+            return self._pet_image_cache[cache_key]
+
+        path = os.path.join(ASSETS_DIR, f"{state}-{slug}.png")
+        if not os.path.exists(path) and state != "neutral":
+            path = os.path.join(ASSETS_DIR, f"neutral-{slug}.png")
+        if not os.path.exists(path):
+            return None
+        try:
+            image = tk.PhotoImage(file=path)
+        except tk.TclError:
+            return None
+
+        max_dim = 320
+        scale = max(1, int(math.ceil(max(image.width(), image.height()) / max_dim)))
+        if scale > 1:
+            image = image.subsample(scale, scale)
+
+        self._pet_image_cache[cache_key] = image
+        return image
+
     def update_ui(self):
         state = self.pet.get_emotional_state()
         species = getattr(self.pet, "species", getattr(self.pet.pet_type, "type", "dog")).lower()
-        skins = PET_SKINS.get(species, PET_SKINS["dog"])
-        skin = skins.get(state) or skins.get("neutral", "")
-
-        self.pet_display.config(text=skin)
+        image = self.load_pet_image(species, state)
+        if image:
+            self.pet_display.config(image=image, text="")
+            self._current_pet_image = image
+        else:
+            self.pet_display.config(image="", text="(missing image)")
+            self._current_pet_image = None
 
         stats = self.pet.pet_type
         lines = [
@@ -909,10 +786,6 @@ class VirtualPetGUI:
         self.market_message.config(text=msg, fg="#22c55e" if success else "#fca5a5")
         self.update_economy_ui()
         self.update_ui()
-
-    def tick_market(self):
-        # Manual ticks are disabled; market moves with Advance Day
-        self.market_message.config(text="Advance the day to move the market.", fg=TEXT_SECONDARY)
 
     def draw_chart(self):
         if not hasattr(self, "chart_canvas") or not hasattr(self, "stock_market"):

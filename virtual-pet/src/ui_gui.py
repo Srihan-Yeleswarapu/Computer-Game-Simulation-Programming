@@ -1,24 +1,25 @@
-import tkinter as tk
-from tkinter import messagebox, ttk
-import audioop
-import math
-import os
-import tempfile
-import wave
-from pet import Pet, petStats
-from economy import Economy
-from stock_market import StockMarket
+import tkinter as tk  # GUI toolkit
+from tkinter import messagebox, ttk  # dialogs + themed widgets
+import audioop  # raw audio processing helpers
+import math  # math helpers for scaling
+import os  # filesystem paths
+import tempfile  # temp file creation
+import wave  # WAV file reading/writing
+from pet import Pet, petStats  # pet model + stat profiles
+from economy import Economy  # cash tracking
+from stock_market import StockMarket  # market simulator
 
-BACKGROUND = "#0f172a"
-CARD_BG = "#111827"
-INPUT_BG = "#0b1220"
-BORDER = "#1f2937"
-TEXT_PRIMARY = "#e5e7eb"
-TEXT_SECONDARY = "#9ca3af"
-ACCENT = "#22c55e"
-ACCENT_DARK = "#16a34a"
-BUTTON_BG = "#2563eb"
-BUTTON_BG_ACTIVE = "#1d4ed8"
+# Theme colors used throughout the UI.
+BACKGROUND = "#0f172a"  # app background
+CARD_BG = "#111827"  # card background
+INPUT_BG = "#0b1220"  # input background
+BORDER = "#1f2937"  # borders and separators
+TEXT_PRIMARY = "#e5e7eb"  # main text color
+TEXT_SECONDARY = "#9ca3af"  # secondary text
+ACCENT = "#22c55e"  # primary accent
+ACCENT_DARK = "#16a34a"  # active accent
+BUTTON_BG = "#2563eb"  # button background
+BUTTON_BG_ACTIVE = "#1d4ed8"  # button active state
 STOCK_COLORS = {
     "PAW": "#60a5fa",
     "MEOW": "#f472b6",
@@ -26,13 +27,16 @@ STOCK_COLORS = {
     "NUT": "#fbbf24",
 }
 
+# Absolute path to the assets directory.
 ASSETS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "assets"))
+# Map display names to asset filename slugs.
 PET_SLUGS = {
     "dog": "dog",
     "cat": "cat",
     "guinea pig": "guinea-pig",
 }
 
+# Default stat profiles used for the GUI.
 GUI_PET_PROFILES = {
     "dog": petStats("dog", 40, 80, 70, 90),
     "cat": petStats("cat", 80, 70, 60, 80),
@@ -40,6 +44,7 @@ GUI_PET_PROFILES = {
 }
 
 def format_bar(label: str, value: int, max_value: int, width: int = 18) -> str:
+    # Normalize values so the bar stays aligned and bounded.
     max_value = max_value or 1
     value = max(0, min(value, max_value))
     filled = int((value / max_value) * width)
@@ -49,6 +54,7 @@ def format_bar(label: str, value: int, max_value: int, width: int = 18) -> str:
 
 class Tooltip:
     def __init__(self, widget: tk.Widget, text: str, delay_ms: int = 400):
+        # Attach a hover tooltip to a widget.
         self.widget = widget
         self.text = text
         self.delay_ms = delay_ms
@@ -59,9 +65,11 @@ class Tooltip:
         widget.bind("<ButtonPress>", self._hide)
 
     def _schedule(self, _event=None):
+        # Wait before showing so it does not flash.
         self._after_id = self.widget.after(self.delay_ms, self._show)
 
     def _show(self):
+        # Create a small top-level tooltip window.
         if self._tip:
             return
         x = self.widget.winfo_rootx() + 12
@@ -83,6 +91,7 @@ class Tooltip:
         label.pack()
 
     def _hide(self, _event=None):
+        # Cancel pending show or close the tooltip.
         if self._after_id:
             self.widget.after_cancel(self._after_id)
             self._after_id = None
@@ -93,10 +102,12 @@ class Tooltip:
 
 class TextTooltip:
     def __init__(self, widget: tk.Text):
+        # Tooltip controller that anchors to a text widget.
         self.widget = widget
         self._tip = None
 
     def show_at(self, text: str, x_root: int, y_root: int):
+        # Show tooltip at a specific screen position.
         self.hide()
         self._tip = tk.Toplevel(self.widget)
         self._tip.wm_overrideredirect(True)
@@ -115,6 +126,7 @@ class TextTooltip:
         label.pack()
 
     def hide(self):
+        # Close the tooltip if it exists.
         if self._tip:
             self._tip.destroy()
             self._tip = None
@@ -122,6 +134,7 @@ class TextTooltip:
 
 class VirtualPetGUI:
     def __init__(self):
+        # Main app setup for the window and state.
         self.root = tk.Tk()
         self.root.title("Virtual Pet Simulator")
         self.root.geometry("1280x720")
@@ -129,20 +142,27 @@ class VirtualPetGUI:
         self.root.resizable(True, True)
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
+        # Runtime state for pet and economy.
         self.pet = None
         self.economy = None
+        # Tooltip instance for stat labels.
         self._stat_tooltip = None
+        # Music playback tracking.
         self._music_temp_path = None
         self._music_started = False
+        # Cache scaled PhotoImage objects to avoid repeated disk loads.
         self._pet_image_cache = {}
         self._current_pet_image = None
 
+        # Build the initial screen and start the loop.
         self.create_start_screen()
         self.root.mainloop()
 
     def create_start_screen(self):
+        # Build the name/species selection screen.
         self.clear()
 
+        # Intro view for naming and choosing the pet type.
         header = tk.Frame(self.root, bg=BACKGROUND, pady=10)
         header.pack(fill="x")
 
@@ -195,6 +215,7 @@ class VirtualPetGUI:
         form.columnconfigure(0, weight=1)
 
     def start_game(self):
+        # Validate input and create the game model.
         name = self.name_entry.get().strip()
         ptype = self.pet_type.get()
 
@@ -202,16 +223,19 @@ class VirtualPetGUI:
             messagebox.showerror("Error", "Please give your pet a name.")
             return
 
+        # Pick a stats profile for the selected pet type.
         profile = GUI_PET_PROFILES.get(ptype.lower(), petStats(ptype.lower()))
         self.pet = Pet(name, profile)
         self.economy = Economy()
         self.stock_market = StockMarket(self.economy)
 
+        # Move into the main game layout.
         self.create_game_screen()
         self.root.after(150, self.show_instructions_popup)
         self.start_music()
 
     def create_game_screen(self):
+        # Build notebook tabs for care, economy, and charts.
         self.clear()
 
         self.notebook = ttk.Notebook(self.root)
@@ -231,6 +255,7 @@ class VirtualPetGUI:
         self.update_economy_ui()
 
     def start_music(self):
+        # Start background music if supported.
         if self._music_started:
             return
         try:
@@ -238,6 +263,7 @@ class VirtualPetGUI:
         except ImportError:
             return
 
+        # Load and loop the background track if available.
         music_path = os.path.abspath(
             os.path.join(os.path.dirname(__file__), "..", "assets", "musicfx-dj-1768763823614.wav")
         )
@@ -252,6 +278,7 @@ class VirtualPetGUI:
         winsound.PlaySound(self._music_temp_path, winsound.SND_FILENAME | winsound.SND_ASYNC | winsound.SND_LOOP)
 
     def stop_music(self):
+        # Stop playback and clean up temp files.
         try:
             import winsound
             winsound.PlaySound(None, winsound.SND_PURGE)
@@ -266,6 +293,7 @@ class VirtualPetGUI:
         self._music_started = False
 
     def create_faded_wav(self, input_path: str, fade_seconds: int = 3, volume_scale: float = 1.0):
+        # Read a wav file and apply fade-in/out for smoother looping.
         try:
             with wave.open(input_path, "rb") as wf:
                 params = wf.getparams()
@@ -273,6 +301,7 @@ class VirtualPetGUI:
         except (wave.Error, FileNotFoundError):
             return None
 
+        # Apply a fade-in/out and optional volume scaling to avoid harsh loops.
         frame_bytes = params.sampwidth * params.nchannels
         if frame_bytes <= 0:
             return None
@@ -283,21 +312,25 @@ class VirtualPetGUI:
         if fade_frames <= 0:
             return input_path
 
+        # Convert frames to a mutable bytearray for processing.
         data = bytearray(frames)
         volume_scale = max(0.0, min(volume_scale, 1.0))
 
+        # Fade in.
         for i in range(fade_frames):
             scale = (i / fade_frames) * volume_scale
             start = i * frame_bytes
             end = start + frame_bytes
             data[start:end] = audioop.mul(data[start:end], params.sampwidth, scale)
 
+        # Fade out.
         for i in range(fade_frames):
             scale = ((fade_frames - i) / fade_frames) * volume_scale
             start = (total_frames - fade_frames + i) * frame_bytes
             end = start + frame_bytes
             data[start:end] = audioop.mul(data[start:end], params.sampwidth, scale)
 
+        # Apply mid-section scaling if requested.
         if volume_scale < 1.0:
             mid_start = fade_frames * frame_bytes
             mid_end = (total_frames - fade_frames) * frame_bytes
@@ -309,6 +342,7 @@ class VirtualPetGUI:
         try:
             temp_fd, temp_path = tempfile.mkstemp(suffix=".wav")
             os.close(temp_fd)
+            # Write the processed audio to a temp file.
             with wave.open(temp_path, "wb") as wf:
                 wf.setparams(params)
                 wf.writeframes(bytes(data))
@@ -317,6 +351,7 @@ class VirtualPetGUI:
             return None
 
     def show_instructions_popup(self):
+        # Show a modal popup with gameplay instructions.
         popup = tk.Toplevel(self.root)
         popup.title("How to Play")
         popup.configure(bg=BACKGROUND)
@@ -425,9 +460,11 @@ class VirtualPetGUI:
         ).pack(pady=(0, 12))
 
     def build_care_tab(self):
+        # Assemble the care tab layout and controls.
         container = tk.Frame(self.care_tab, bg=BACKGROUND, padx=10, pady=10)
         container.pack(fill="both", expand=True)
 
+        # Primary panel with pet display and action buttons.
         header = tk.Label(
             container,
             text="Care Dashboard",
@@ -471,6 +508,7 @@ class VirtualPetGUI:
         self._stat_tooltip = TextTooltip(self.stats_label)
         self.bind_stat_tooltips()
 
+        # Button bar for pet actions.
         btn_frame = tk.Frame(container, bg=BACKGROUND)
         btn_frame.pack(pady=12)
 
@@ -504,9 +542,11 @@ class VirtualPetGUI:
         Tooltip(shower_btn, "Spend $8 to improve cleanliness.")
 
     def build_economy_tab(self):
+        # Assemble the economy tab layout and controls.
         container = tk.Frame(self.economy_tab, bg=BACKGROUND, padx=16, pady=16)
         container.pack(fill="both", expand=True)
 
+        # Trading view for balances, prices, and holdings.
         header = tk.Label(
             container,
             text="Economy & Investments",
@@ -603,9 +643,11 @@ class VirtualPetGUI:
         Tooltip(self.market_message, "Status messages for your trades and market updates.")
 
     def build_chart_tab(self):
+        # Assemble the chart tab layout.
         container = tk.Frame(self.chart_tab, bg=BACKGROUND, padx=16, pady=16)
         container.pack(fill="both", expand=True)
 
+        # Canvas used for the stock price history chart.
         header = tk.Label(
             container,
             text="Market Charts",
@@ -620,6 +662,7 @@ class VirtualPetGUI:
         self.chart_canvas.bind("<Configure>", lambda e: self.draw_chart())
 
     def load_pet_image(self, species: str, state: str):
+        # Load and scale a pet image for the given species/state.
         species = species.lower()
         state = state.lower()
         slug = PET_SLUGS.get(species, PET_SLUGS["dog"])
@@ -627,6 +670,7 @@ class VirtualPetGUI:
         if cache_key in self._pet_image_cache:
             return self._pet_image_cache[cache_key]
 
+        # Fall back to neutral if a specific state image is missing.
         path = os.path.join(ASSETS_DIR, f"{state}-{slug}.png")
         if not os.path.exists(path) and state != "neutral":
             path = os.path.join(ASSETS_DIR, f"neutral-{slug}.png")
@@ -637,15 +681,18 @@ class VirtualPetGUI:
         except tk.TclError:
             return None
 
+        # Subsample large sprites to fit the display panel.
         max_dim = 320
         scale = max(1, int(math.ceil(max(image.width(), image.height()) / max_dim)))
         if scale > 1:
             image = image.subsample(scale, scale)
 
+        # Store in cache to reuse later.
         self._pet_image_cache[cache_key] = image
         return image
 
     def update_ui(self):
+        # Refresh pet display and stat readout.
         state = self.pet.get_emotional_state()
         species = getattr(self.pet, "species", getattr(self.pet.pet_type, "type", "dog")).lower()
         image = self.load_pet_image(species, state)
@@ -656,6 +703,7 @@ class VirtualPetGUI:
             self.pet_display.config(image="", text="(missing image)")
             self._current_pet_image = None
 
+        # Update the stat readout and color tags in the text widget.
         stats = self.pet.pet_type
         lines = [
             (f"{self.pet.name} - {species.title()}\n", ["normal"]),
@@ -674,6 +722,7 @@ class VirtualPetGUI:
         self.update_economy_ui()
 
     def format_bar_line(self, label: str, value: int, max_value: int):
+        # Format one stat line with a color tag.
         line = format_bar(label, value, max_value) + "\n"
         max_value = max_value or 1
         ratio = max(0, min(value, max_value)) / max_value
@@ -682,6 +731,7 @@ class VirtualPetGUI:
         return line, [stat_tag, color_tag]
 
     def bind_stat_tooltips(self):
+        # Bind tooltip text to stat labels.
         tooltips = {
             "stat_hunger": "Increases: Feed.  Decreases: Time passing, Play.",
             "stat_happiness": "Increases: Play.  Decreases: Time passing, Bathe.",
@@ -696,6 +746,7 @@ class VirtualPetGUI:
             self.stats_label.tag_bind(tag, "<Leave>", lambda e: self._hide_stat_tip())
 
     def _show_stat_tip(self, event, text: str):
+        # Show stat tooltip near the cursor.
         if not self._stat_tooltip:
             return
         x = event.x_root + 12
@@ -703,12 +754,15 @@ class VirtualPetGUI:
         self._stat_tooltip.show_at(text, x, y)
 
     def _hide_stat_tip(self):
+        # Hide the stat tooltip.
         if self._stat_tooltip:
             self._stat_tooltip.hide()
 
     def update_economy_ui(self):
+        # Update economy labels and holdings list.
         if not hasattr(self, "stock_market"):
             return
+        # Sync labels and holdings with the latest market values.
         balance = self.economy.balance
         portfolio = self.stock_market.portfolio_value()
         total_profit = self.stock_market.total_profit()
@@ -733,18 +787,21 @@ class VirtualPetGUI:
         self.draw_chart()
 
     def feed(self):
+        # Feed action: spend money and reduce hunger.
         if self.economy.spend("food", 10):
             self.pet.feed(20)
         self.update_ui()
         self.check_game_over()
 
     def play(self):
+        # Play action: spend money and raise happiness.
         if self.economy.spend("toys", 5):
             self.pet.play(10)
         self.update_ui()
         self.check_game_over()
 
     def sleep(self):
+        # Sleep action: restore energy without spending.
         self.pet.sleep(5)
         self.update_ui()
         self.check_game_over()
@@ -758,12 +815,14 @@ class VirtualPetGUI:
         self.check_game_over()
 
     def shower(self):
+        # Bath action: spend money and improve cleanliness.
         if self.economy.spend("grooming", 8):
             self.pet.shower(5)
         self.update_ui()
         self.check_game_over()
 
     def buy_stock(self):
+        # Attempt to buy shares based on the entry field.
         try:
             shares = int(self.shares_entry.get() or "0")
         except ValueError:
@@ -776,6 +835,7 @@ class VirtualPetGUI:
         self.update_ui()
 
     def sell_stock(self):
+        # Attempt to sell shares based on the entry field.
         try:
             shares = int(self.shares_entry.get() or "0")
         except ValueError:
@@ -788,6 +848,7 @@ class VirtualPetGUI:
         self.update_ui()
 
     def draw_chart(self):
+        # Render the stock history chart to the canvas.
         if not hasattr(self, "chart_canvas") or not hasattr(self, "stock_market"):
             return
         canvas = self.chart_canvas
@@ -806,6 +867,7 @@ class VirtualPetGUI:
         min_price = min(p for _, p in all_points)
         max_price = max(p for _, p in all_points)
 
+        # Compute drawing bounds based on the current canvas size.
         width = canvas.winfo_width() or 800
         height = canvas.winfo_height() or 400
         pad = 40
@@ -853,10 +915,12 @@ class VirtualPetGUI:
             canvas.create_text(width - pad - 115, legend_y + 5, text=symbol, fill=TEXT_PRIMARY, anchor="w", font=("Consolas", 9))
 
     def clear(self):
+        # Remove all widgets from the root window.
         for widget in self.root.winfo_children():
             widget.destroy()
 
     def check_game_over(self):
+        # Stop the game if the pet reaches a loss state.
         if not self.pet.detectLoss():
             return False
         reason = getattr(self.pet, "last_death_reason", "") or "Your pet's wellbeing dropped too low."
@@ -866,9 +930,11 @@ class VirtualPetGUI:
         return True
 
     def on_close(self):
+        # Handle window close events.
         self.stop_music()
         self.root.destroy()
 
 
 if __name__ == "__main__":
+    # Launch the GUI when run directly.
     VirtualPetGUI()
